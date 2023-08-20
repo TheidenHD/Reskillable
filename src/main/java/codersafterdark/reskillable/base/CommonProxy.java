@@ -11,6 +11,8 @@ import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.minecraft.world.level.storage.loot.predicates.LootItemConditions;
 import net.minecraft.world.storage.loot.conditions.LootConditionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -25,7 +27,7 @@ public class CommonProxy {
         MinecraftForge.EVENT_BUS.register(RequirementCache.class);
         ConfigHandler.init(event.getSuggestedConfigurationFile());
         PacketHandler.preInit();
-        LootConditionManager.registerCondition(new LootConditionRequirement.Serializer());
+        LootItemConditions.register(new LootConditionRequirement.Serializer());
         ReskillableAdvancements.preInit();
     }
 

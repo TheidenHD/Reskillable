@@ -12,7 +12,11 @@ import codersafterdark.reskillable.base.LevelLockHandler;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.Collection;
@@ -27,7 +31,7 @@ public class AutoUnlocker {
     public static void setUnlockables() {
         hasBeenSet = true;
         if (unlockables.isEmpty()) {
-            Collection<Unlockable> entries = ReskillableRegistries.UNLOCKABLES.getValuesCollection();
+            Collection<Unlockable> entries = ReskillableRegistries.UNLOCKABLES.getValues();
             for (Unlockable u : entries) {
                 if (u.isEnabled() && u.getCost() == 0) {
                     addUnlockable(u);
@@ -55,7 +59,7 @@ public class AutoUnlocker {
         if (!hasBeenSet) {
             return;
         }
-        Collection<Unlockable> entries = ReskillableRegistries.UNLOCKABLES.getValuesCollection();
+        Collection<Unlockable> entries = ReskillableRegistries.UNLOCKABLES.getValues();
         for (Unlockable u : entries) {
             if (u.isEnabled() && u.getCost() == 0) {
                 addUnlockable(u);
@@ -66,7 +70,7 @@ public class AutoUnlocker {
         //TODO: This should really recheck all online players. Though I do not believe there is any real way to currently change cost while players are connected
     }
 
-    public static void recheck(EntityPlayer player) {
+    public static void recheck(Player player) {
         PlayerData data = PlayerDataHandler.get(player);
         if (data == null) {
             return;
@@ -79,8 +83,8 @@ public class AutoUnlocker {
                 RequirementHolder holder = u.getRequirements();
                 if (holder.equals(LevelLockHandler.EMPTY_LOCK) || data.matchStats(holder)) {
                     skillInfo.unlock(u, player);
-                    if (player instanceof EntityPlayerMP) {
-                        ToastHelper.sendUnlockableToast((EntityPlayerMP) player, u);
+                    if (player instanceof ServerPlayer) {
+                        ToastHelper.sendUnlockableToast((ServerPlayer) player, u);
                     }
                     anyUnlocked = true;
                 }
@@ -97,12 +101,12 @@ public class AutoUnlocker {
     }
 
     @SubscribeEvent
-    public static void onEntityLiving(LivingEvent.LivingUpdateEvent event) {
+    public static void onEntityLiving(LivingEvent.LivingTickEvent event) {
         if (hasUncacheable) {
-            EntityLivingBase entityLiving = event.getEntityLiving();
+            LivingEntity entityLiving = event.getEntity();
             //Recheck every 5 seconds if any auto unlockables have uncacheable requirements.
-            if (entityLiving instanceof EntityPlayer && !entityLiving.world.isRemote && entityLiving.ticksExisted % 100 == 0) {
-                recheck((EntityPlayer) entityLiving);
+            if (entityLiving instanceof Player player && !entityLiving.level().isClientSide() && entityLiving.tickCount % 100 == 0) {
+                recheck(player);
             }
         }
     }

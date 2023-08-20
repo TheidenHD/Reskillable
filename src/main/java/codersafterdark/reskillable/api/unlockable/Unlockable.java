@@ -5,16 +5,15 @@ import codersafterdark.reskillable.api.ReskillableAPI;
 import codersafterdark.reskillable.api.ReskillableRegistries;
 import codersafterdark.reskillable.api.data.RequirementHolder;
 import codersafterdark.reskillable.api.skill.Skill;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraftforge.registries.IForgeRegistryEntry;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
 
-public abstract class Unlockable extends IForgeRegistryEntry.Impl<Unlockable> implements Comparable<Unlockable> {
+public abstract class Unlockable implements Comparable<Unlockable> {
     private final String name;
     protected UnlockableConfig unlockableConfig;
     private ResourceLocation icon;
@@ -22,7 +21,6 @@ public abstract class Unlockable extends IForgeRegistryEntry.Impl<Unlockable> im
 
     public Unlockable(ResourceLocation name, int x, int y, ResourceLocation skillName, int cost, String... defaultRequirements) {
         this.name = name.toString().replace(":", ".");
-        setRegistryName(name);
         setIcon(new ResourceLocation(name.getNamespace(), "textures/unlockables/" + name.getPath() + ".png"));
         this.unlockableConfig = ReskillableAPI.getInstance().getTraitConfig(name, x, y, cost, defaultRequirements);
         setParentSkill(skillName);
@@ -35,7 +33,7 @@ public abstract class Unlockable extends IForgeRegistryEntry.Impl<Unlockable> im
 
     protected void setParentSkill(ResourceLocation skillName) {
         if (parentSkill != null) {
-            if (skillName != null && skillName.equals(parentSkill.getRegistryName())) {
+            if (skillName != null && skillName.equals(ReskillableRegistries.SKILLS.getKey(parentSkill))) {
                 //The skill is already the parent skill
                 return;
             }
@@ -62,11 +60,11 @@ public abstract class Unlockable extends IForgeRegistryEntry.Impl<Unlockable> im
     }
 
     public String getName() {
-        return new TextComponentTranslation("reskillable.unlock." + getKey()).getUnformattedComponentText();
+        return Component.translatable("reskillable.unlock." + getKey()).getString();
     }
 
     public String getDescription() {
-        return new TextComponentTranslation("reskillable.unlock." + getKey() + ".desc").getUnformattedComponentText();
+        return Component.translatable("reskillable.unlock." + getKey() + ".desc").getString();
     }
 
     public ResourceLocation getIcon() {
@@ -77,10 +75,10 @@ public abstract class Unlockable extends IForgeRegistryEntry.Impl<Unlockable> im
         icon = newIcon;
     }
 
-    public void onUnlock(EntityPlayer player) {
+    public void onUnlock(Player player) {
     }
 
-    public void onLock(EntityPlayer player) {
+    public void onLock(Player player) {
     }
 
     public boolean hasSpikes() {

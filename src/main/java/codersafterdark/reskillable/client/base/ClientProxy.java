@@ -10,8 +10,12 @@ import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.ServerAdvancementManager;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
@@ -33,19 +37,19 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override
-    public EntityPlayer getClientPlayer() {
-        return Minecraft.getMinecraft().player;
+    public Player getClientPlayer() {
+        return Minecraft.getInstance().player;
     }
 
     @SubscribeEvent
     public static void connect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        new AdvancementManager(null);
+        new ServerAdvancementManager(null);
     }
 
     @Override
     @Nullable
-    public AdvancementProgress getPlayerAdvancementProgress(EntityPlayer entityPlayer, Advancement advancement) {
-        return Optional.ofNullable(Minecraft.getMinecraft().getConnection())
+    public AdvancementProgress getPlayerAdvancementProgress(Player entityPlayer, Advancement advancement) {
+        return Optional.ofNullable(Minecraft.getInstance().getConnection())
                 .map(NetHandlerPlayClient::getAdvancementManager)
                 .map(advancementManager -> advancementManager.advancementToProgress)
                 .map(advancementAdvancementProgressMap -> advancementAdvancementProgressMap.get(advancement))
@@ -54,6 +58,6 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public String getLocalizedString(String string) {
-        return I18n.format(string);
+        return I18n.get(string);
     }
 }

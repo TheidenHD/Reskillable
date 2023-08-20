@@ -5,9 +5,9 @@ import codersafterdark.reskillable.api.skill.Skill;
 import codersafterdark.reskillable.api.unlockable.Ability;
 import codersafterdark.reskillable.api.unlockable.IAbilityEventHandler;
 import codersafterdark.reskillable.api.unlockable.Unlockable;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,28 +32,28 @@ public class PlayerSkillInfo {
         respec();
     }
 
-    public void loadFromNBT(NBTTagCompound cmp) {
-        level = cmp.getInteger(TAG_LEVEL);
-        skillPoints = cmp.getInteger(TAG_SKILL_POINTS);
+    public void loadFromNBT(CompoundTag cmp) {
+        level = cmp.getInt(TAG_LEVEL);
+        skillPoints = cmp.getInt(TAG_SKILL_POINTS);
 
         unlockables.clear();
-        NBTTagCompound unlockablesCmp = cmp.getCompoundTag(TAG_UNLOCKABLES);
+        CompoundTag unlockablesCmp = cmp.getCompound(TAG_UNLOCKABLES);
 
-        for (String s : unlockablesCmp.getKeySet()) {
+        for (String s : unlockablesCmp.getAllKeys()) {
             Optional.ofNullable(ReskillableRegistries.UNLOCKABLES.getValue(new ResourceLocation(s.replace(".", ":"))))
                     .ifPresent(unlockables::add);
         }
     }
 
-    public void saveToNBT(NBTTagCompound cmp) {
-        cmp.setInteger(TAG_LEVEL, level);
-        cmp.setInteger(TAG_SKILL_POINTS, skillPoints);
+    public void saveToNBT(CompoundTag cmp) {
+        cmp.putInt(TAG_LEVEL, level);
+        cmp.putInt(TAG_SKILL_POINTS, skillPoints);
 
-        NBTTagCompound unlockablesCmp = new NBTTagCompound();
+        CompoundTag unlockablesCmp = new CompoundTag();
         for (Unlockable u : unlockables) {
-            unlockablesCmp.setBoolean(u.getKey(), true);
+            unlockablesCmp.putBoolean(u.getKey(), true);
         }
-        cmp.setTag(TAG_UNLOCKABLES, unlockablesCmp);
+        cmp.put(TAG_UNLOCKABLES, unlockablesCmp);
     }
 
     public int getLevel() {
@@ -109,13 +109,13 @@ public class PlayerSkillInfo {
         }
     }
 
-    public void lock(Unlockable u, EntityPlayer p) {
+    public void lock(Unlockable u, Player p) {
         skillPoints += u.getCost();
         unlockables.remove(u);
         u.onLock(p);
     }
 
-    public void unlock(Unlockable u, EntityPlayer p) {
+    public void unlock(Unlockable u, Player p) {
         skillPoints -= u.getCost();
         unlockables.add(u);
         u.onUnlock(p);

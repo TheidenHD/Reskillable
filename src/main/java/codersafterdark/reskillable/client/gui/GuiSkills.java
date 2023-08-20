@@ -12,8 +12,12 @@ import codersafterdark.reskillable.lib.LibMisc;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentTranslation;
 import org.apache.commons.lang3.tuple.Pair;
@@ -24,7 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GuiSkills extends GuiScreen {
+public class GuiSkills extends Screen {
     public static final ResourceLocation SKILLS_RES = new ResourceLocation(LibMisc.MOD_ID, "textures/gui/skills.png");
 
     private int guiWidth, guiHeight;
@@ -40,11 +44,11 @@ public class GuiSkills extends GuiScreen {
     private List<Skill> skills = new ArrayList<>();
 
     public GuiSkills() {
-        ReskillableRegistries.SKILLS.getValuesCollection().stream().filter(Skill::isEnabled).forEach(enabledSkills::add);
+        ReskillableRegistries.SKILLS.getValues().stream().filter(Skill::isEnabled).forEach(enabledSkills::add);
     }
 
     public static void drawSkill(int x, int y, Skill skill) {
-        Minecraft mc = Minecraft.getMinecraft();
+        Minecraft mc = Minecraft.getInstance();
         int rank = PlayerDataHandler.get(mc.player).getSkillInfo(skill).getRank();
         if (skill.hasCustomSprites()) {
             ResourceLocation sprite = skill.getSpriteLocation(rank);
@@ -60,28 +64,28 @@ public class GuiSkills extends GuiScreen {
     }
 
     public static void drawScrollButtonsTop(int x, int y) {
-        Minecraft.getMinecraft().renderEngine.bindTexture(SKILLS_RES);
+        Minecraft.getInstance().renderEngine.bindTexture(SKILLS_RES);
         RenderHelper.drawTexturedModalRect(x, y, 1, 0, 230, 80, 4);
     }
 
     public static void drawScrollButtonsBottom(int x, int y) {
-        Minecraft.getMinecraft().renderEngine.bindTexture(SKILLS_RES);
+        Minecraft.getInstance().renderEngine.bindTexture(SKILLS_RES);
         RenderHelper.drawTexturedModalRect(x, y, 1, 0, 235, 80, 4);
     }
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) {
         if (keyCode == 1) {
-            this.mc.displayGuiScreen(null);
+            this.minecraft.setScreen(null);
 
-            if (this.mc.currentScreen == null) {
-                this.mc.setIngameFocus();
+            if (this.minecraft.screen == null) {
+                this.minecraft.setIngameFocus();
             }
-        } else if (keyCode == KeyBindings.openGUI.getKeyCode() || keyCode == Minecraft.getMinecraft().gameSettings.keyBindInventory.getKeyCode()) {
-            this.mc.displayGuiScreen(null);
+        } else if (keyCode == KeyBindings.openGUI.getKeyCode() || keyCode == Minecraft.getInstance().gameSettings.keyBindInventory.getKeyCode()) {
+            this.minecraft.setScreen(null);
 
-            if (this.mc.currentScreen != null) {
-                this.mc.setIngameFocus();
+            if (this.minecraft.screen != null) {
+                this.minecraft.setIngameFocus();
             }
         }
     }
@@ -98,7 +102,7 @@ public class GuiSkills extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
-        mc.renderEngine.bindTexture(SKILLS_RES);
+        minecraft.renderEngine.bindTexture(SKILLS_RES);
         GlStateManager.color(1F, 1F, 1F);
 
         left = width / 2 - guiWidth / 2;
@@ -135,20 +139,20 @@ public class GuiSkills extends GuiScreen {
                 v += h;
             }
 
-            mc.renderEngine.bindTexture(SKILLS_RES);
+            minecraft.renderEngine.bindTexture(SKILLS_RES);
             GlStateManager.color(1F, 1F, 1F);
             drawTexturedModalRect(x, y, u, v, w, h);
             drawSkill(x + 5, y + 9, skill);
 
-            mc.fontRenderer.drawString(skill.getName(), x + 26, y + 6, 0xFFFFFF);
-            mc.fontRenderer.drawString(skillInfo.getLevel() + "/" + skill.getCap(), x + 26, y + 17, 0x888888);
+            minecraft.fontRenderer.drawString(skill.getName(), x + 26, y + 6, 0xFFFFFF);
+            minecraft.fontRenderer.drawString(skillInfo.getLevel() + "/" + skill.getCap(), x + 26, y + 17, 0x888888);
         }
         GL11.glColor4f(1, 1, 1, 1);
         drawScrollButtonsTop(left + 49, top + 14);
         drawScrollButtonsBottom(left + 49, lastY + 32);
 
         String skillsStr = new TextComponentTranslation("reskillable.misc.skills").getUnformattedComponentText();
-        fontRenderer.drawString(skillsStr, width / 2 - fontRenderer.getStringWidth(skillsStr) / 2, top + 5, 4210752);
+        font.drawInBatch(skillsStr, width / 2 - fontRenderer.getStringWidth(skillsStr) / 2, top + 5, 4210752);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
@@ -158,9 +162,9 @@ public class GuiSkills extends GuiScreen {
         super.mouseClicked(mouseX, mouseY, mouseButton);
 
         if (mouseButton == 0 && hoveredSkill != null) {
-            mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            minecraft.getSoundManager().play(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             GuiSkillInfo gui = new GuiSkillInfo(hoveredSkill);
-            mc.displayGuiScreen(gui);
+            minecraft.setScreen(gui);
         }
         if (mouseButton == 0) {
             if (mouseX >= left + 49 && mouseX <= left + 128 && mouseY >= top + 14) {

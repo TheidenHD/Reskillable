@@ -1,17 +1,17 @@
 package codersafterdark.reskillable.api.requirement;
 
 import codersafterdark.reskillable.api.data.PlayerData;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.server.level.ServerPlayer;
 
 public abstract class Requirement {
     protected String tooltip = "";
 
-    public abstract boolean achievedByPlayer(EntityPlayer entityPlayerMP);
+    public abstract boolean achievedByPlayer(ServerPlayer entityPlayerMP);
 
     public String getToolTip(PlayerData data) {
         try {
-            return String.format(internalToolTip(), data == null || !data.requirementAchieved(this) ? TextFormatting.RED : TextFormatting.GREEN);
+            return String.format(internalToolTip(), data == null || !data.requirementAchieved(this) ? ChatFormatting.RED : ChatFormatting.GREEN);
         } catch (IllegalArgumentException e) {
             return internalToolTip(); //If the formatting code is not there just return whatever the internal String is
         }

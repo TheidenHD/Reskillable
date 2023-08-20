@@ -3,6 +3,9 @@ package codersafterdark.reskillable.client.base;
 import codersafterdark.reskillable.api.data.PlayerDataHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -26,17 +29,17 @@ public class ClientTickHandler {
     }
 
     @SubscribeEvent
-    public static void renderTick(RenderTickEvent event) {
-        if (event.phase == Phase.START) {
+    public static void renderTick(TickEvent.RenderTickEvent event) {
+        if (event.phase == TickEvent.Phase.START) {
             partialTicks = event.renderTickTime;
         }
     }
 
     @SubscribeEvent
-    public static void clientTickEnd(ClientTickEvent event) {
-        if (event.phase == Phase.END) {
-            Minecraft mc = Minecraft.getMinecraft();
-            if (mc.world == null) {
+    public static void clientTickEnd(TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.level == null) {
                 PlayerDataHandler.cleanup();
             } else if (mc.player != null) {
                 while (!scheduledActions.isEmpty()) {
@@ -44,8 +47,8 @@ public class ClientTickHandler {
                 }
             }
 
-            GuiScreen gui = mc.currentScreen;
-            if (gui == null || !gui.doesGuiPauseGame()) {
+            Screen gui = mc.screen;
+            if (gui == null || !gui.isPauseScreen()) {
                 ticksInGame++;
                 partialTicks = 0;
                 HUDHandler.tick();

@@ -1,15 +1,15 @@
 package codersafterdark.reskillable.api.data;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 
 public class GenericNBTLockKey extends NBTLockKey {
-    public GenericNBTLockKey(NBTTagCompound tag) {
+    public GenericNBTLockKey(CompoundTag tag) {
         super(tag);
     }
 
     public GenericNBTLockKey(ItemStack stack) {
-        this(stack.getTagCompound());
+        this(stack.getTag());
     }
 
     @Override
@@ -24,6 +24,6 @@ public class GenericNBTLockKey extends NBTLockKey {
 
     @Override
     public int hashCode() {
-        return tag == null ? super.hashCode() : tag.hashCode();
+        return tag == null ? super.hashCode() : tag;
     }
 }

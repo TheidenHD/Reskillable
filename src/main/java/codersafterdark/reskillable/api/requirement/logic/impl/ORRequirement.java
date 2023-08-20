@@ -3,8 +3,8 @@ package codersafterdark.reskillable.api.requirement.logic.impl;
 import codersafterdark.reskillable.api.requirement.Requirement;
 import codersafterdark.reskillable.api.requirement.RequirementComparision;
 import codersafterdark.reskillable.api.requirement.logic.DoubleRequirement;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 public class ORRequirement extends DoubleRequirement {
     public ORRequirement(Requirement left, Requirement right) {
@@ -12,13 +12,13 @@ public class ORRequirement extends DoubleRequirement {
     }
 
     @Override
-    public boolean achievedByPlayer(EntityPlayer player) {
+    public boolean achievedByPlayer(ServerPlayer player) {
         return leftAchieved(player) || rightAchieved(player);
     }
 
     @Override
     protected String getFormat() {
-        return new TextComponentTranslation("reskillable.requirements.format.or").getUnformattedComponentText();
+        return Component.translatable("reskillable.requirements.format.or").getString();
     }
 
     @Override

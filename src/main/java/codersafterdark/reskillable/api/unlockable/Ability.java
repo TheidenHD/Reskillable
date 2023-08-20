@@ -1,6 +1,6 @@
 package codersafterdark.reskillable.api.unlockable;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public abstract class Ability extends Unlockable {
     public Ability(ResourceLocation name, int x, int y, ResourceLocation skillName, int cost, String... requirements) {

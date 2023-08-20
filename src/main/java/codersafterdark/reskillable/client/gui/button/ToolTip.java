@@ -1,15 +1,12 @@
 package codersafterdark.reskillable.client.gui.button;
 
-import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.ChatFormatting;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@SideOnly(Side.CLIENT)
 public class ToolTip {
     private final List<String> lines = new ArrayList<>();
     private final long delay;
@@ -31,7 +28,7 @@ public class ToolTip {
         return add(line, null);
     }
 
-    public boolean add(String line, @Nullable TextFormatting formatting) {
+    public boolean add(String line, @Nullable ChatFormatting formatting) {
         return lines.add(formatting != null ? formatting + line : line);
     }
 

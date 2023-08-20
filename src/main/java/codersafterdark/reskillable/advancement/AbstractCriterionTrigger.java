@@ -1,11 +1,11 @@
 package codersafterdark.reskillable.advancement;
 
 import com.google.common.collect.Maps;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.advancements.ICriterionInstance;
-import net.minecraft.advancements.ICriterionTrigger;
-import net.minecraft.advancements.PlayerAdvancements;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.advancements.CriterionTrigger;
+import net.minecraft.advancements.CriterionTriggerInstance;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.PlayerAdvancements;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -14,12 +14,12 @@ import java.util.function.Function;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public abstract class CriterionTrigger<T extends CriterionListeners<U>, U extends ICriterionInstance> implements ICriterionTrigger<U> {
+public abstract class AbstractCriterionTrigger<T extends CriterionListeners<U>, U extends CriterionTriggerInstance> implements CriterionTrigger<U> {
     private final ResourceLocation id;
     private final Function<PlayerAdvancements, T> createNew;
     private final Map<PlayerAdvancements, T> listeners = Maps.newHashMap();
 
-    protected CriterionTrigger(ResourceLocation id, Function<PlayerAdvancements, T> createNew) {
+    protected AbstractCriterionTrigger(ResourceLocation id, Function<PlayerAdvancements, T> createNew) {
         this.id = id;
         this.createNew = createNew;
     }
@@ -30,7 +30,7 @@ public abstract class CriterionTrigger<T extends CriterionListeners<U>, U extend
     }
 
     @Override
-    public void addListener(PlayerAdvancements playerAdvancements, Listener<U> listener) {
+    public void addPlayerListener(PlayerAdvancements playerAdvancements, Listener<U> listener) {
         T listeners = this.listeners.get(playerAdvancements);
         if (listeners == null) {
             listeners = createNew.apply(playerAdvancements);
@@ -40,7 +40,7 @@ public abstract class CriterionTrigger<T extends CriterionListeners<U>, U extend
     }
 
     @Override
-    public void removeListener(PlayerAdvancements playerAdvancements, Listener<U> listener) {
+    public void removePlayerListener(PlayerAdvancements playerAdvancements, Listener<U> listener) {
         T listeners = this.listeners.get(playerAdvancements);
 
         if (listeners != null) {
@@ -51,13 +51,14 @@ public abstract class CriterionTrigger<T extends CriterionListeners<U>, U extend
         }
     }
 
+    @Override
+    public void removePlayerListeners(PlayerAdvancements playerAdvancements) {
+        this.listeners.remove(playerAdvancements);
+    }
+
     @Nullable
     public T getListeners(PlayerAdvancements playerAdvancements) {
         return this.listeners.get(playerAdvancements);
     }
 
-    @Override
-    public void removeAllListeners(PlayerAdvancements playerAdvancements) {
-        this.listeners.remove(playerAdvancements);
-    }
 }

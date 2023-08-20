@@ -4,19 +4,18 @@ import codersafterdark.reskillable.api.ReskillableAPI;
 import codersafterdark.reskillable.api.data.*;
 import codersafterdark.reskillable.network.MessageLockedItem;
 import codersafterdark.reskillable.network.PacketHandler;
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.passive.EntitySheep;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
-import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumHand;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.animal.Sheep;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
@@ -26,16 +25,15 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteract
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem;
-import net.minecraftforge.event.world.BlockEvent.BreakEvent;
-import net.minecraftforge.fml.common.eventhandler.Event;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.oredict.OreDictionary;
 import org.apache.logging.log4j.Level;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-
-import static net.minecraftforge.fml.common.eventhandler.EventPriority.HIGH;
 
 public class LevelLockHandler {
     public static final String[] DEFAULT_SKILL_LOCKS = new String[]{"minecraft:iron_shovel:*=reskillable:gathering|5", "minecraft:iron_axe:*=reskillable:gathering|5", "minecraft:iron_sword:*=reskillable:attack|5", "minecraft:iron_pickaxe:*=reskillable:mining|5", "minecraft:iron_hoe:*=reskillable:farming|5", "minecraft:iron_helmet:*=reskillable:defense|5", "minecraft:iron_chestplate:*=reskillable:defense|5", "minecraft:iron_leggings:*=reskillable:defense|5", "minecraft:iron_boots:*=reskillable:defense|5", "minecraft:golden_shovel:*=reskillable:gathering|5,reskillable:magic|5", "minecraft:golden_axe:*=reskillable:gathering|5,reskillable:magic|5", "minecraft:golden_sword:*=reskillable:attack|5,reskillable:magic|5", "minecraft:golden_pickaxe:*=reskillable:mining|5,reskillable:magic|5", "minecraft:golden_hoe:*=reskillable:farming|5,reskillable:magic|5", "minecraft:golden_helmet:*=reskillable:defense|5,reskillable:magic|5", "minecraft:golden_chestplate:*=reskillable:defense|5,reskillable:magic|5", "minecraft:golden_leggings:*=reskillable:defense|5,reskillable:magic|5", "minecraft:golden_boots:*=reskillable:defense|5,reskillable:magic|5", "minecraft:diamond_shovel:*=reskillable:gathering|16", "minecraft:diamond_axe:*=reskillable:gathering|16", "minecraft:diamond_sword:*=reskillable:attack|16", "minecraft:diamond_pickaxe:*=reskillable:mining|16", "minecraft:diamond_hoe:*=reskillable:farming|16", "minecraft:diamond_helmet:*=reskillable:defense|16", "minecraft:diamond_chestplate:*=reskillable:defense|16", "minecraft:diamond_leggings:*=reskillable:defense|16", "minecraft:diamond_boots:*=reskillable:defense|16", "minecraft:shears:*=reskillable:farming|5,reskillable:gathering|5", "minecraft:fishing_rod:*=reskillable:gathering|8", "minecraft:shield:*=reskillable:defense|8", "minecraft:bow:*=reskillable:attack|8", "minecraft:ender_pearl=reskillable:magic|8", "minecraft:ender_eye=reskillable:magic|16,reskillable:building|8", "minecraft:elytra:*=reskillable:defense|16,reskillable:agility|24,reskillable:magic|16", "minecraft:lead=reskillable:farming|5", "minecraft:end_crystal=reskillable:building|24,reskillable:magic|32", "minecraft:iron_horse_armor:*=reskillable:defense|5,reskillable:agility|5", "minecraft:golden_horse_armor:*=reskillable:defense|5,reskillable:magic|5,reskillable:agility|5", "minecraft:diamond_horse_armor:*=reskillable:defense|16,reskillable:agility|16", "minecraft:fireworks=reskillable:agility|24", "minecraft:dye:15=reskillable:farming|12", "minecraft:saddle=reskillable:agility|12", "minecraft:redstone=reskillable:building|5", "minecraft:redstone_torch=reskillable:building|5", "minecraft:skull:1=reskillable:building|20,reskillable:attack|20,reskillable:defense|20"};
@@ -270,107 +268,107 @@ public class LevelLockHandler {
         return holder.hasNone() ? EMPTY_LOCK : holder;
     }
 
-    public static boolean canPlayerUseItem(EntityPlayer player, ItemStack stack) {
+    public static boolean canPlayerUseItem(Player player, ItemStack stack) {
         RequirementHolder lock = getSkillLock(stack);
         return lock.equals(EMPTY_LOCK) || PlayerDataHandler.get(player).matchStats(lock);
     }
 
-    @SubscribeEvent(priority = HIGH)
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public static void hurtEvent(LivingAttackEvent event) {
-        if (!event.isCanceled() && event.getSource().getTrueSource() instanceof EntityPlayer) {
-            EntityPlayer player = (EntityPlayer) event.getSource().getTrueSource();
-            genericEnforce(event, player, player.getHeldItemMainhand(), MessageLockedItem.MSG_ITEM_LOCKED);
+        if (!event.isCanceled() && event.getSource().getEntity() instanceof Player) {
+            Player player = (Player) event.getSource().getEntity();
+            genericEnforce(event, player, player.getMainHandItem(), MessageLockedItem.MSG_ITEM_LOCKED);
         }
     }
 
-    @SubscribeEvent(priority = HIGH)
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public static void leftClick(LeftClickBlock event) {
         enforce(event);
         if (event.isCanceled()) {
             return;
         }
-        IBlockState state = event.getWorld().getBlockState(event.getPos());
+        BlockState state = event.getLevel().getBlockState(event.getPos());
         Block block = state.getBlock();
         ItemStack stack = new ItemStack(state.getBlock(), 1, state.getBlock().getMetaFromState(state));
         if (stack.isEmpty()) {
-            stack = block.getItem(event.getWorld(), event.getPos(), state);
+            stack = block.getCloneItemStack(event.getLevel(), event.getPos(), state);
         }
         if (block.hasTileEntity(state)) {
-            TileEntity te = event.getWorld().getTileEntity(event.getPos());
-            if (te != null && !te.isInvalid()) {
-                stack.setTagCompound(te.writeToNBT(new NBTTagCompound()));
+            BlockEntity te = event.getLevel().getBlockEntity(event.getPos());
+            if (te != null && !te.isRemoved()) {
+                stack.deserializeNBT(te.serializeNBT());
             }
         }
-        genericEnforce(event, event.getEntityPlayer(), stack, MessageLockedItem.MSG_BLOCK_BREAK_LOCKED);
+        genericEnforce(event, event.getEntity(), stack, MessageLockedItem.MSG_BLOCK_BREAK_LOCKED);
     }
 
-    @SubscribeEvent(priority = HIGH)
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public static void rightClickItem(RightClickItem event) {
         enforce(event);
     }
 
-    @SubscribeEvent(priority = HIGH)
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public static void rightClickBlock(RightClickBlock event) {
         enforce(event);
         if (event.isCanceled()) {
             return;
         } else if (event.getItemStack().isEmpty()) {
             //Don't let the block get activated just because this hand is empty
-            EntityPlayer player = event.getEntityPlayer();
-            genericEnforce(event, player, event.getHand().equals(EnumHand.MAIN_HAND) ? player.getHeldItemOffhand() : player.getHeldItemMainhand(), MessageLockedItem.MSG_ITEM_LOCKED);
+            Player player = event.getEntity();
+            genericEnforce(event, player, event.getHand().equals(InteractionHand.MAIN_HAND) ? player.getOffhandItem() : player.getMainHandItem(), MessageLockedItem.MSG_ITEM_LOCKED);
             if (event.isCanceled()) {
                 return;
             }
         }
-        IBlockState state = event.getWorld().getBlockState(event.getPos());
+        BlockState state = event.getLevel().getBlockState(event.getPos());
         Block block = state.getBlock();
         ItemStack stack = new ItemStack(block, 1, state.getBlock().getMetaFromState(state));
         if (stack.isEmpty()) {
-            stack = block.getItem(event.getWorld(), event.getPos(), state);
+            stack = block.getCloneItemStack(event.getLevel(), event.getPos(), state);
         }
         if (block.hasTileEntity(state)) {
-            TileEntity te = event.getWorld().getTileEntity(event.getPos());
-            if (te != null && !te.isInvalid()) {
-                stack.setTagCompound(te.writeToNBT(new NBTTagCompound()));
+            BlockEntity te = event.getLevel().getBlockEntity(event.getPos());
+            if (te != null && !te.isRemoved()) {
+                stack.setTag(te.serializeNBT());
             }
         }
         genericEnforce(event, event.getEntityPlayer(), stack, MessageLockedItem.MSG_BLOCK_USE_LOCKED);
     }
 
-    @SubscribeEvent(priority = HIGH)
-    public static void onBlockBreak(BreakEvent event) {
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public static void onBlockBreak(BlockEvent.BreakEvent event) {
         if (event.isCanceled()) {
             return;
         }
-        IBlockState state = event.getWorld().getBlockState(event.getPos());
+        BlockState state = event.getLevel().getBlockState(event.getPos());
         ItemStack stack = new ItemStack(state.getBlock(), 1, state.getBlock().getMetaFromState(state));
         if (state.getBlock().hasTileEntity(state)) {
-            TileEntity te = event.getWorld().getTileEntity(event.getPos());
-            if (te != null && !te.isInvalid()) {
-                stack.setTagCompound(te.writeToNBT(new NBTTagCompound()));
+            BlockEntity be = event.getLevel().getBlockEntity(event.getPos());
+            if (be != null && !be.isRemoved()) {
+                stack.setTag(be.serializeNBT());
             }
         }
         genericEnforce(event, event.getPlayer(), stack, MessageLockedItem.MSG_BLOCK_BREAK_LOCKED);
     }
 
-    @SubscribeEvent(priority = HIGH)
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public static void entityInteract(EntityInteract event) {
         enforce(event);
     }
 
     @SubscribeEvent
     public static void onArmorEquip(LivingEquipmentChangeEvent event) {
-        if (event.getEntity() instanceof EntityPlayer) {
-            EntityPlayer player = (EntityPlayer) event.getEntity();
+        if (event.getEntity() instanceof Player) {
+            Player player = (Player) event.getEntity();
             if ((ConfigHandler.enforceOnCreative || !player.isCreative()) && !isFake(player)) {
-                EntityEquipmentSlot slot = event.getSlot();
-                if (slot.getSlotType().equals(EntityEquipmentSlot.Type.ARMOR)) {
-                    ItemStack stack = player.inventory.armorInventory.get(slot.getIndex());
+                EquipmentSlot slot = event.getSlot();
+                if (slot.getType().equals(EquipmentSlot.Type.ARMOR)) {
+                    ItemStack stack = player.getInventory().armor.get(slot.getIndex());
                     if (!canPlayerUseItem(player, stack)) {
-                        if (!player.inventory.addItemStackToInventory(stack)) {
-                            player.dropItem(stack, false);
+                        if (!player.getInventory().add(stack)) {
+                            player.drop(stack, false);
                         }
-                        player.inventory.armorInventory.set(slot.getIndex(), ItemStack.EMPTY);
+                        player.getInventory().armor.set(slot.getIndex(), ItemStack.EMPTY);
                         tellPlayer(player, stack, MessageLockedItem.MSG_ARMOR_EQUIP_LOCKED);
                     }
                 }
@@ -378,10 +376,10 @@ public class LevelLockHandler {
         }
     }
 
-    @SubscribeEvent(priority = HIGH)
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onEntityDrops(LivingDropsEvent event) {
-        if (!event.isCanceled() && ConfigHandler.disableSheepWool && event.getEntity() instanceof EntitySheep) {
-            event.getDrops().removeIf(e -> e.getItem().getItem() == Item.getItemFromBlock(Blocks.WOOL));
+        if (!event.isCanceled() && ConfigHandler.disableSheepWool && event.getEntity() instanceof Sheep) {
+            event.getDrops().removeIf(e -> e.getItem().getItem() == Item.byBlock(Blocks.WHITE_WOOL));
         }
     }
 
@@ -390,10 +388,10 @@ public class LevelLockHandler {
     }
 
     public static void enforce(PlayerInteractEvent event) {
-        genericEnforce(event, event.getEntityPlayer(), event.getItemStack(), MessageLockedItem.MSG_ITEM_LOCKED);
+        genericEnforce(event, event.getEntity(), event.getItemStack(), MessageLockedItem.MSG_ITEM_LOCKED);
     }
 
-    public static void genericEnforce(Event event, EntityPlayer player, ItemStack stack, String lockMessage) {
+    public static void genericEnforce(Event event, Player player, ItemStack stack, String lockMessage) {
         if (!event.isCancelable() || event.isCanceled() || player == null || stack == null || stack.isEmpty() || (!ConfigHandler.enforceOnCreative && player.isCreative())) {
             return;
         }
@@ -411,9 +409,9 @@ public class LevelLockHandler {
     }
 
     //TODO: Make this properly handle custom requirements instead of just not displaying them and showing that it should be met
-    public static void tellPlayer(EntityPlayer player, ItemStack stack, String msg) {
-        if (player instanceof EntityPlayerMP) {
-            PacketHandler.INSTANCE.sendTo(new MessageLockedItem(stack, msg), (EntityPlayerMP) player);
+    public static void tellPlayer(Player player, ItemStack stack, String msg) {
+        if (player instanceof ServerPlayer) {
+            PacketHandler.INSTANCE.sendTo(new MessageLockedItem(stack, msg), (ServerPlayer) player);
         }
     }
 }

@@ -1,18 +1,18 @@
 package codersafterdark.reskillable.api.requirement;
 
 import codersafterdark.reskillable.api.data.PlayerData;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 //This has the same body as a TrueRequirement, except that it should not simplify out
 public final class NoneRequirement extends Requirement {
     public NoneRequirement() {
-        this.tooltip = TextFormatting.GREEN + new TextComponentTranslation("reskillable.requirements.format.unobtainable").getUnformattedComponentText();
+        this.tooltip = ChatFormatting.GREEN + Component.translatable("reskillable.requirements.format.unobtainable").getString();
     }
 
     @Override
-    public boolean achievedByPlayer(EntityPlayer entityPlayerMP) {
+    public boolean achievedByPlayer(ServerPlayer entityPlayerMP) {
         return true;
     }
 

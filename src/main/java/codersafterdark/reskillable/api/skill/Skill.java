@@ -2,9 +2,8 @@ package codersafterdark.reskillable.api.skill;
 
 import codersafterdark.reskillable.api.ReskillableAPI;
 import codersafterdark.reskillable.api.unlockable.Unlockable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraftforge.registries.IForgeRegistryEntry;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -14,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class Skill extends IForgeRegistryEntry.Impl<Skill> implements Comparable<Skill> {
+public abstract class Skill implements Comparable<Skill> {
     private final Map<Integer, ResourceLocation> customSprites = new HashMap<>();
     private final List<Unlockable> unlockables = new ArrayList<>();
     private final ResourceLocation spriteLocation;
@@ -27,7 +26,6 @@ public abstract class Skill extends IForgeRegistryEntry.Impl<Skill> implements C
         this.name = name.toString().replace(":", ".");
         this.background = background;
         this.spriteLocation = new ResourceLocation(name.getNamespace(), "textures/skills/" + name.getPath() + ".png");
-        this.setRegistryName(name);
         this.skillConfig = ReskillableAPI.getInstance().getSkillConfig(name);
     }
 
@@ -44,7 +42,7 @@ public abstract class Skill extends IForgeRegistryEntry.Impl<Skill> implements C
     }
 
     public String getName() {
-        return new TextComponentTranslation("reskillable.skill." + getKey()).getUnformattedComponentText();
+        return Component.translatable("reskillable.skill." + getKey()).getString();
     }
 
     public ResourceLocation getBackground() {
@@ -116,7 +114,7 @@ public abstract class Skill extends IForgeRegistryEntry.Impl<Skill> implements C
                 .filter(entry -> entry.getKey() < level + 1)
                 .mapToInt(Map.Entry::getValue)
                 .sum() + this.skillConfig.getBaseLevelCost();
-        return cost < 0 ? 0 : cost;
+        return Math.max(cost, 0);
     }
 
     public final SkillConfig getSkillConfig() {

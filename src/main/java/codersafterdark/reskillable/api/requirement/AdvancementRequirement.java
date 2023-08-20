@@ -3,12 +3,12 @@ package codersafterdark.reskillable.api.requirement;
 import codersafterdark.reskillable.api.ReskillableAPI;
 import codersafterdark.reskillable.api.data.PlayerData;
 import codersafterdark.reskillable.api.data.RequirementHolder;
+import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Optional;
 
@@ -21,7 +21,7 @@ public class AdvancementRequirement extends Requirement {
     }
 
     @Override
-    public boolean achievedByPlayer(EntityPlayer entityPlayer) {
+    public boolean achievedByPlayer(ServerPlayer entityPlayer) {
         return Optional.ofNullable(this.getAdvancement())
                 .map(advancement -> ReskillableAPI.getInstance().getAdvancementProgress(entityPlayer, advancement))
                 .map(AdvancementProgress::isDone)
@@ -32,14 +32,14 @@ public class AdvancementRequirement extends Requirement {
     public String getToolTip(PlayerData data) {
         if (tooltip.isEmpty()) {
             Advancement adv = getAdvancement();
-            this.tooltip = TextFormatting.GRAY + " - " + TextFormatting.GOLD + new TextComponentTranslation("reskillable.requirements.format.advancement",
-                    "%S", adv == null ? "" : adv.getDisplayText().getUnformattedText().replaceAll("[\\[\\]]", "")).getUnformattedComponentText();
+            this.tooltip = ChatFormatting.GRAY + " - " + ChatFormatting.GOLD + Component.translatable("reskillable.requirements.format.advancement",
+                    "%S", adv == null ? "" : adv.getChatComponent().getString().replaceAll("[\\[\\]]", "")).getString();
         }
         return super.getToolTip(data);
     }
 
     public Advancement getAdvancement() {
-        return RequirementHolder.getAdvancementList().getAdvancement(advancementName);
+        return RequirementHolder.getAdvancementList().get(advancementName);
     }
 
     @Override

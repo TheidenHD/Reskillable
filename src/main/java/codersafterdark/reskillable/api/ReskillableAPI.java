@@ -8,8 +8,8 @@ import codersafterdark.reskillable.api.unlockable.Unlockable;
 import codersafterdark.reskillable.api.unlockable.UnlockableConfig;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import org.apache.logging.log4j.Level;
 
 import java.util.Objects;
@@ -59,11 +59,11 @@ public class ReskillableAPI {
         return modAccess.getUnlockableConfig(name, x, y, cost, defaultRequirements);
     }
 
-    public void syncPlayerData(EntityPlayer entityPlayer, PlayerData playerData) {
+    public void syncPlayerData(Player entityPlayer, PlayerData playerData) {
         modAccess.syncPlayerData(entityPlayer, playerData);
     }
 
-    public AdvancementProgress getAdvancementProgress(EntityPlayer entityPlayer, Advancement advancement) {
+    public AdvancementProgress getAdvancementProgress(Player entityPlayer, Advancement advancement) {
         return modAccess.getAdvancementProgress(entityPlayer, advancement);
     }
 

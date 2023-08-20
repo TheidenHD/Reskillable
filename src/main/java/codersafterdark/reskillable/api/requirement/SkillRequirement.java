@@ -2,9 +2,9 @@ package codersafterdark.reskillable.api.requirement;
 
 import codersafterdark.reskillable.api.data.PlayerDataHandler;
 import codersafterdark.reskillable.api.skill.Skill;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Objects;
 
@@ -15,12 +15,12 @@ public class SkillRequirement extends Requirement {
     public SkillRequirement(Skill skill, int level) {
         this.skill = skill;
         this.level = level;
-        this.tooltip = TextFormatting.GRAY + " - " + new TextComponentTranslation("reskillable.requirements.format.skill", TextFormatting.DARK_AQUA, skill.getName(),
-                "%s", level).getUnformattedComponentText();
+        this.tooltip = ChatFormatting.GRAY + " - " + Component.translatable("reskillable.requirements.format.skill", ChatFormatting.DARK_AQUA, skill.getName(),
+                "%s", level).getString();
     }
 
     @Override
-    public boolean achievedByPlayer(EntityPlayer entityPlayer) {
+    public boolean achievedByPlayer(ServerPlayer entityPlayer) {
         return PlayerDataHandler.get(entityPlayer).getSkillInfo(skill).getLevel() >= level;
     }
 

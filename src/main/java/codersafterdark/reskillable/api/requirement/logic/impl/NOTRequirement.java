@@ -4,8 +4,8 @@ import codersafterdark.reskillable.api.data.PlayerData;
 import codersafterdark.reskillable.api.requirement.Requirement;
 import codersafterdark.reskillable.api.requirement.RequirementComparision;
 import codersafterdark.reskillable.api.requirement.logic.OuterRequirement;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.server.level.ServerPlayer;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -17,10 +17,10 @@ public class NOTRequirement extends Requirement implements OuterRequirement {
     public NOTRequirement(Requirement requirement) {
         this.requirement = requirement;
         String parentToolTip = this.requirement.internalToolTip();
-        if (parentToolTip.startsWith(TextFormatting.GRAY + " - ")) {
-            parentToolTip = parentToolTip.replaceFirst(TextFormatting.GRAY + " - ", "");
+        if (parentToolTip.startsWith(ChatFormatting.GRAY + " - ")) {
+            parentToolTip = parentToolTip.replaceFirst(ChatFormatting.GRAY + " - ", "");
         }
-        String start = TextFormatting.GRAY + " - ";
+        String start = ChatFormatting.GRAY + " - ";
         if (parentToolTip.length() > 2 && parentToolTip.startsWith("\u00a7")) {
             start += parentToolTip.substring(0, 2);
             parentToolTip = parentToolTip.substring(2);
@@ -29,7 +29,7 @@ public class NOTRequirement extends Requirement implements OuterRequirement {
     }
 
     @Override
-    public boolean achievedByPlayer(EntityPlayer player) {
+    public boolean achievedByPlayer(ServerPlayer player) {
         return !this.requirement.achievedByPlayer(player);
     }
 
@@ -37,18 +37,18 @@ public class NOTRequirement extends Requirement implements OuterRequirement {
     public String getToolTip(PlayerData data) {
         try {
             //Just use the opposite coloring for the parent tooltip. Allows for red and green coloring of requirement name
-            return String.format(internalToolTip(), data == null || !data.requirementAchieved(this) ? TextFormatting.RED : TextFormatting.GREEN);
+            return String.format(internalToolTip(), data == null || !data.requirementAchieved(this) ? ChatFormatting.RED : ChatFormatting.GREEN);
         } catch (IllegalArgumentException e) {
             //If it fails fall back to old method of inverting the colors
             String parentToolTip = this.requirement.getToolTip(data);
             if (parentToolTip == null) {
                 return "";
             }
-            if (parentToolTip.startsWith(TextFormatting.GRAY + " - ")) {
-                parentToolTip = parentToolTip.replaceFirst(TextFormatting.GRAY + " - ", "");
+            if (parentToolTip.startsWith(ChatFormatting.GRAY + " - ")) {
+                parentToolTip = parentToolTip.replaceFirst(ChatFormatting.GRAY + " - ", "");
             }
             char colorCode = '\u00a7';
-            String start = TextFormatting.GRAY + " - ";
+            String start = ChatFormatting.GRAY + " - ";
             if (parentToolTip.length() > 2 && parentToolTip.startsWith(Character.toString(colorCode))) {
                 start += parentToolTip.substring(0, 2);
                 parentToolTip = parentToolTip.substring(2);

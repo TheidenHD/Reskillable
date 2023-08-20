@@ -1,20 +1,19 @@
 package codersafterdark.reskillable.api.data;
 
 import net.minecraft.nbt.*;
-import net.minecraftforge.common.util.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 public abstract class NBTLockKey implements FuzzyLockKey {
-    protected NBTTagCompound tag;
+    protected CompoundTag tag;
 
-    protected NBTLockKey(NBTTagCompound tag) {
+    protected NBTLockKey(CompoundTag tag) {
         this.tag = tag == null || tag.isEmpty() ? null : tag;
     }
 
-    protected static boolean similarNBT(NBTBase full, NBTBase partial) {
+    protected static boolean similarNBT(Tag full, Tag partial) {
         if (full == null) {
             return partial == null;
         }
@@ -28,27 +27,27 @@ public abstract class NBTLockKey implements FuzzyLockKey {
             return true;
         }
         switch (full.getId()) {
-            case Constants.NBT.TAG_COMPOUND:
-                NBTTagCompound fullTag = (NBTTagCompound) full;
-                NBTTagCompound partialTag = (NBTTagCompound) partial;
-                Set<String> ptKeys = partialTag.getKeySet();
+            case Tag.TAG_COMPOUND:
+                CompoundTag fullTag = (CompoundTag) full;
+                CompoundTag partialTag = (CompoundTag) partial;
+                Set<String> ptKeys = partialTag.getAllKeys();
                 for (String partialKey : ptKeys) {
                     //One of the keys is missing OR the tags are different types OR they do not match
-                    if (!fullTag.hasKey(partialKey, partialTag.getTagId(partialKey)) || !similarNBT(fullTag.getTag(partialKey), partialTag.getTag(partialKey))) {
+                    if (!fullTag.contains(partialKey, partialTag.getTagType(partialKey)) || !similarNBT(fullTag.get(partialKey), partialTag.get(partialKey))) {
                         return false;
                     }
                 }
                 return true;
-            case Constants.NBT.TAG_LIST:
-                NBTTagList fTagList = (NBTTagList) full;
-                NBTTagList pTagList = (NBTTagList) partial;
-                if (fTagList.isEmpty() && !pTagList.isEmpty() || fTagList.getTagType() != pTagList.getTagType()) {
+            case Tag.TAG_LIST:
+                ListTag fTagList = (ListTag) full;
+                ListTag pTagList = (ListTag) partial;
+                if (fTagList.isEmpty() && !pTagList.isEmpty() || fTagList.getType() != pTagList.getType()) {
                     return false;
                 }
-                for (int i = 0; i < pTagList.tagCount(); i++) {
-                    NBTBase pTag = pTagList.get(i);
+                for (int i = 0; i < pTagList.size(); i++) {
+                    Tag pTag = pTagList.get(i);
                     boolean hasTag = false;
-                    for (int j = 0; j < fTagList.tagCount(); j++) {
+                    for (int j = 0; j < fTagList.size(); j++) {
                         if (similarNBT(fTagList.get(j), pTag)) {
                             hasTag = true;
                             break;
@@ -59,9 +58,9 @@ public abstract class NBTLockKey implements FuzzyLockKey {
                     }
                 }
                 return true;
-            case Constants.NBT.TAG_BYTE_ARRAY:
-                byte[] fByteArray = ((NBTTagByteArray) full).getByteArray();
-                byte[] pByteArray = ((NBTTagByteArray) partial).getByteArray();
+            case Tag.TAG_BYTE_ARRAY:
+                byte[] fByteArray = ((ByteArrayTag) full).getAsByteArray();
+                byte[] pByteArray = ((ByteArrayTag) partial).getAsByteArray();
                 List<Integer> hits = new ArrayList<>();
                 for (byte pByte : pByteArray) {
                     boolean hasMatch = false;
@@ -77,9 +76,9 @@ public abstract class NBTLockKey implements FuzzyLockKey {
                     }
                 }
                 return true;
-            case Constants.NBT.TAG_INT_ARRAY:
-                int[] fIntArray = ((NBTTagIntArray) full).getIntArray();
-                int[] pIntArray = ((NBTTagIntArray) partial).getIntArray();
+            case Tag.TAG_INT_ARRAY:
+                int[] fIntArray = ((IntArrayTag) full).getAsIntArray();
+                int[] pIntArray = ((IntArrayTag) partial).getAsIntArray();
                 hits = new ArrayList<>();
                 for (int pInt : pIntArray) {
                     boolean hasMatch = false;
@@ -95,9 +94,9 @@ public abstract class NBTLockKey implements FuzzyLockKey {
                     }
                 }
                 return true;
-            case Constants.NBT.TAG_LONG_ARRAY:
-                long[] fLongArray = getLongArray((NBTTagLongArray) full);
-                long[] pLongArray = getLongArray((NBTTagLongArray) partial);
+            case Tag.TAG_LONG_ARRAY:
+                long[] fLongArray = getLongArray((LongArrayTag) full);
+                long[] pLongArray = getLongArray((LongArrayTag) partial);
                 hits = new ArrayList<>();
                 for (long pLong : pLongArray) {
                     boolean hasMatch = false;
@@ -118,7 +117,7 @@ public abstract class NBTLockKey implements FuzzyLockKey {
         }
     }
 
-    private static long[] getLongArray(NBTTagLongArray tag) {
+    private static long[] getLongArray(LongArrayTag tag) {
         String t = tag.toString();
         String[] entries = t.substring(3, t.length() - 1).split(",");//Trim the closing bracket and the [L; at the start
         long[] data = new long[entries.length];
@@ -131,7 +130,7 @@ public abstract class NBTLockKey implements FuzzyLockKey {
         return data;
     }
 
-    public NBTTagCompound getTag() {
+    public CompoundTag getTag() {
         return this.tag;
     }
 

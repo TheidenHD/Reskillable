@@ -4,6 +4,7 @@ import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
 import java.util.Map;
 
+// TODO: FIX ME
 public class LoadingPlugin implements IFMLLoadingPlugin {
     public static boolean runtimeDeobfEnabled;
 

@@ -3,8 +3,9 @@ package codersafterdark.reskillable.api.requirement.logic.impl;
 import codersafterdark.reskillable.api.requirement.Requirement;
 import codersafterdark.reskillable.api.requirement.RequirementComparision;
 import codersafterdark.reskillable.api.requirement.logic.DoubleRequirement;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 
 public class ANDRequirement extends DoubleRequirement {
     public ANDRequirement(Requirement left, Requirement right) {
@@ -12,13 +13,13 @@ public class ANDRequirement extends DoubleRequirement {
     }
 
     @Override
-    public boolean achievedByPlayer(EntityPlayer player) {
+    public boolean achievedByPlayer(ServerPlayer player) {
         return leftAchieved(player) && rightAchieved(player);
     }
 
     @Override
     protected String getFormat() {
-        return new TextComponentTranslation("reskillable.requirements.format.and").getUnformattedComponentText();
+        return Component.translatable("reskillable.requirements.format.and").getString();
     }
 
     //TODO: Figure out how to implement this in the other logic requirements for if the elements are not just the same

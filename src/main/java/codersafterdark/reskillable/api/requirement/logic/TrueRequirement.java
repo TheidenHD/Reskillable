@@ -3,17 +3,17 @@ package codersafterdark.reskillable.api.requirement.logic;
 import codersafterdark.reskillable.api.data.PlayerData;
 import codersafterdark.reskillable.api.requirement.Requirement;
 import codersafterdark.reskillable.api.requirement.RequirementComparision;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 public class TrueRequirement extends Requirement {
     public TrueRequirement() {
-        this.tooltip = TextFormatting.GREEN + new TextComponentTranslation("reskillable.requirements.format.unobtainable").getUnformattedComponentText();
+        this.tooltip = ChatFormatting.GREEN + Component.translatable("reskillable.requirements.format.unobtainable").getString();
     }
 
     @Override
-    public boolean achievedByPlayer(EntityPlayer entityPlayerMP) {
+    public boolean achievedByPlayer(ServerPlayer entityPlayerMP) {
         return true;
     }
 

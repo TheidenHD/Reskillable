@@ -1,8 +1,9 @@
 package codersafterdark.reskillable.api.data;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.Objects;
 
@@ -13,14 +14,14 @@ public class ModLockKey extends NBTLockKey {
         this(modName, null);
     }
 
-    public ModLockKey(String modName, NBTTagCompound tag) {
+    public ModLockKey(String modName, CompoundTag tag) {
         super(tag);
         this.modName = modName == null ? "" : modName.toLowerCase();
     }
 
     public ModLockKey(ItemStack stack) {
-        super(stack.getTagCompound());
-        ResourceLocation registryName = stack.getItem().getRegistryName();
+        super(stack.getTag());
+        ResourceLocation registryName = ForgeRegistries.ITEMS.getKey(stack.getItem());
         this.modName = registryName == null ? "" : registryName.getNamespace();
     }
 

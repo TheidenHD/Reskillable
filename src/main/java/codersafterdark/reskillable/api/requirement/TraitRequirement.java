@@ -3,9 +3,9 @@ package codersafterdark.reskillable.api.requirement;
 import codersafterdark.reskillable.api.data.PlayerDataHandler;
 import codersafterdark.reskillable.api.skill.Skill;
 import codersafterdark.reskillable.api.unlockable.Unlockable;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Objects;
 
@@ -14,12 +14,12 @@ public class TraitRequirement extends Requirement {
 
     public TraitRequirement(Unlockable unlockable) {
         this.unlockable = unlockable;
-        this.tooltip = TextFormatting.GRAY + " - " + TextFormatting.LIGHT_PURPLE + new TextComponentTranslation("reskillable.requirements.format.trait", "%s",
-                this.unlockable.getName()).getUnformattedComponentText();
+        this.tooltip = ChatFormatting.GRAY + " - " + ChatFormatting.LIGHT_PURPLE + Component.translatable("reskillable.requirements.format.trait", "%s",
+                this.unlockable.getName()).getString();
     }
 
     @Override
-    public boolean achievedByPlayer(EntityPlayer entityPlayer) {
+    public boolean achievedByPlayer(ServerPlayer entityPlayer) {
         return PlayerDataHandler.get(entityPlayer).getSkillInfo(unlockable.getParentSkill()).isUnlocked(unlockable);
     }
 

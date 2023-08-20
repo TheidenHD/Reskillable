@@ -8,14 +8,12 @@ import codersafterdark.reskillable.api.requirement.logic.TrueRequirement;
 import codersafterdark.reskillable.base.ConfigHandler;
 import codersafterdark.reskillable.lib.LibObfuscation;
 import com.google.common.collect.Lists;
+import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.AdvancementList;
-import net.minecraft.advancements.AdvancementManager;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.ServerAdvancementManager;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +102,7 @@ public class RequirementHolder {
 
     public static AdvancementList getAdvancementList() {
         if (advList == null) {
-            advList = ReflectionHelper.getPrivateValue(AdvancementManager.class, null, LibObfuscation.ADVANCEMENT_LIST);
+            advList = ObfuscationReflectionHelper.getPrivateValue(ServerAdvancementManager.class, null, LibObfuscation.ADVANCEMENT_LIST[1]);
         }
         return advList;
     }
@@ -121,20 +119,18 @@ public class RequirementHolder {
         return requirements.size();
     }
 
-    @SideOnly(Side.CLIENT)
     public void addRequirementsToTooltip(PlayerData data, List<String> tooltip) {
         if (!isRealLock()) {
             return;
         }
-        if (!ConfigHandler.hideRequirements || GuiScreen.isShiftKeyDown()) {
-            tooltip.add(TextFormatting.DARK_PURPLE + new TextComponentTranslation("reskillable.misc.requirements").getUnformattedComponentText());
+        if (!ConfigHandler.hideRequirements || Screen.hasShiftDown()) {
+            tooltip.add(ChatFormatting.DARK_PURPLE + Component.translatable("reskillable.misc.requirements").getString());
             addRequirementsIgnoreShift(data, tooltip);
         } else {
-            tooltip.add(TextFormatting.DARK_PURPLE + new TextComponentTranslation("reskillable.misc.requirements_shift").getUnformattedComponentText());
+            tooltip.add(ChatFormatting.DARK_PURPLE + Component.translatable("reskillable.misc.requirements_shift").getString());
         }
     }
 
-    @SideOnly(Side.CLIENT)
     public void addRequirementsIgnoreShift(PlayerData data, List<String> tooltip) {
         if (isRealLock()) {
             requirements.stream().map(requirement -> requirement.getToolTip(data)).forEach(tooltip::add);

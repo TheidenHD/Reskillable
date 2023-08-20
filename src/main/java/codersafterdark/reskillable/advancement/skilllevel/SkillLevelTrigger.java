@@ -1,28 +1,27 @@
 package codersafterdark.reskillable.advancement.skilllevel;
 
-import codersafterdark.reskillable.Reskillable;
-import codersafterdark.reskillable.advancement.CriterionTrigger;
+import codersafterdark.reskillable.advancement.AbstractCriterionTrigger;
 import codersafterdark.reskillable.api.ReskillableRegistries;
 import codersafterdark.reskillable.api.skill.Skill;
 import codersafterdark.reskillable.lib.LibMisc;
-import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.JsonUtils;
-import net.minecraft.util.ResourceLocation;
+import com.mojang.realmsclient.util.JsonUtils;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.advancements.critereon.DeserializationContext;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SkillLevelTrigger extends CriterionTrigger<SkillLevelListeners, SkillLevelCriterionInstance> {
+public class SkillLevelTrigger extends AbstractCriterionTrigger<SkillLevelListeners, SkillLevelCriterionInstance> {
     public SkillLevelTrigger() {
         super(new ResourceLocation(LibMisc.MOD_ID, "skill_level"), SkillLevelListeners::new);
     }
 
-    public void trigger(EntityPlayerMP player, Skill skill, int level) {
+    public void trigger(ServerPlayer player, Skill skill, int level) {
         SkillLevelListeners listeners = this.getListeners(player.getAdvancements());
         if (listeners != null) {
             listeners.trigger(skill, level);
@@ -30,10 +29,10 @@ public class SkillLevelTrigger extends CriterionTrigger<SkillLevelListeners, Ski
     }
 
     @Override
-    public SkillLevelCriterionInstance deserializeInstance(JsonObject json, JsonDeserializationContext context) {
-        int level = JsonUtils.getInt(json, "level");
+    public SkillLevelCriterionInstance createInstance(JsonObject json, DeserializationContext context) {
+        int level = JsonUtils.getIntOr("level", json, 0);
         if (json.has("skill")) {
-            ResourceLocation skillName = new ResourceLocation(JsonUtils.getString(json, "skill"));
+            ResourceLocation skillName = new ResourceLocation(JsonUtils.getRequiredString("skill", json));
             Skill skill = ReskillableRegistries.SKILLS.getValue(skillName);
             if (skill != null) {
                 return new SkillLevelCriterionInstance(skill, level);

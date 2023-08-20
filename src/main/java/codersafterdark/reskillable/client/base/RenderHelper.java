@@ -11,6 +11,7 @@
 package codersafterdark.reskillable.client.base;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -23,7 +24,6 @@ import org.lwjgl.opengl.GL11;
 
 import java.util.List;
 
-@SideOnly(Side.CLIENT)
 public class RenderHelper {
     public static void renderTooltip(int x, int y, List<String> tooltipData) {
         int color = 0x505000ff;
@@ -42,9 +42,9 @@ public class RenderHelper {
             int var5 = 0;
             int var6;
             int var7;
-            FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+            Font fontRenderer = Minecraft.getInstance().font;
             for (var6 = 0; var6 < tooltipData.size(); ++var6) {
-                var7 = fontRenderer.getStringWidth(tooltipData.get(var6));
+                var7 = fontRenderer.width(tooltipData.get(var6));
                 if (var7 > var5) {
                     var5 = var7;
                 }
@@ -56,7 +56,7 @@ public class RenderHelper {
                 var9 += 2 + (tooltipData.size() - 1) * 10;
             }
 
-            ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
+            ScaledResolution res = new ScaledResolution(Minecraft.getInstance());
             int right = var6 + var5 + 5;
             int swidth = res.getScaledWidth();
             if (right > swidth) {

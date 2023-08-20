@@ -1,10 +1,11 @@
 package codersafterdark.reskillable.client.gui.button;
 
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 
-public class GuiBestButton extends GuiButton implements IToolTipProvider {
-    public GuiBestButton(int buttonId, int x, int y, String buttonText) {
-        super(buttonId, x, y, buttonText);
+public class GuiBestButton extends Button implements IToolTipProvider {
+    public GuiBestButton(int x, int y, int width, int height, String buttonText, OnPress press, CreateNarration narration) {
+        super(x, y, width, height, Component.translatable(buttonText), press, narration);
     }
 
     @Override

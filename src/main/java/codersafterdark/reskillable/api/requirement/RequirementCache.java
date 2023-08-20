@@ -10,16 +10,16 @@ import codersafterdark.reskillable.api.requirement.logic.impl.NOTRequirement;
 import codersafterdark.reskillable.network.InvalidateRequirementPacket;
 import codersafterdark.reskillable.network.PacketHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.WorldServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.AdvancementEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -33,7 +33,7 @@ public class RequirementCache {
     private Map<Class<? extends Requirement>, Map<Requirement, Boolean>> requirementCache = new HashMap<>();
     private Set<Class<? extends Requirement>> recentlyInvalidated = new HashSet<>();
     private boolean valid = true;
-    private boolean isRemote;//true if client
+    private boolean isClientSide;//true if client
     private boolean dirtyCache;
     private UUID uuid;
 
@@ -42,18 +42,18 @@ public class RequirementCache {
      * Switch to using RequirementCache#getCache
      */
     @Deprecated
-    public RequirementCache(@Nonnull EntityPlayer player) {
-        this(player.getUniqueID(), player.getEntityWorld().isRemote);
-        cacheMap.put(new SidedUUID(uuid, isRemote), this);
+    public RequirementCache(@Nonnull Player player) {
+        this(player.getUUID(), player.level().isClientSide());
+        cacheMap.put(new SidedUUID(uuid, isClientSide), this);
     }
 
     private RequirementCache(UUID uuid, boolean isClientPlayer) {
         this.uuid = uuid;
-        this.isRemote = isClientPlayer;
+        this.isClientSide = isClientPlayer;
     }
 
-    public static RequirementCache getCache(@Nonnull EntityPlayer player) {
-        return getCache(player.getUniqueID(), player.getEntityWorld().isRemote);
+    public static RequirementCache getCache(@Nonnull Player player) {
+        return getCache(player.getUUID(), player.level().isClientSide());
     }
 
     public static RequirementCache getCache(UUID uuid, boolean isRemote) {
@@ -66,8 +66,8 @@ public class RequirementCache {
         return cache;
     }
 
-    public static boolean hasCache(@Nonnull EntityPlayer player) {
-        return hasCache(player.getUniqueID(), player.getEntityWorld().isRemote);
+    public static boolean hasCache(@Nonnull Player player) {
+        return hasCache(player.getUUID(), player.level().isClientSide());
     }
 
     public static boolean hasCache(UUID uuid, boolean isRemote) {
@@ -84,9 +84,9 @@ public class RequirementCache {
         dirtyCacheTypes.addAll(Arrays.asList(requirementClasses));
     }
 
-    public static void invalidateCache(EntityPlayer player, Class<? extends Requirement>... cacheTypes) {
+    public static void invalidateCache(Player player, Class<? extends Requirement>... cacheTypes) {
         if (player != null) {
-            invalidateCache(player.getUniqueID(), cacheTypes);
+            invalidateCache(player.getUUID(), cacheTypes);
         }
     }
 
@@ -102,9 +102,9 @@ public class RequirementCache {
                 //Send packet to client
                 RequirementCache cache = getCache(uuid, false);
                 if (cache != null) {
-                    EntityPlayer player = cache.getPlayer();
+                    Player player = cache.getPlayer();
                     if (player != null) {
-                        PacketHandler.INSTANCE.sendTo(new InvalidateRequirementPacket(uuid, cacheTypes), (EntityPlayerMP) player);
+                        PacketHandler.INSTANCE.sendTo(new InvalidateRequirementPacket(uuid, cacheTypes), (ServerPlayer) player);
                     }
                 }
             }
@@ -131,8 +131,8 @@ public class RequirementCache {
         getCache(uuid, isRemote).invalidateCache(cacheTypes);
     }
 
-    public static boolean requirementAchieved(EntityPlayer player, Requirement requirement) {
-        return player != null && requirementAchieved(player.getUniqueID(), player.getEntityWorld().isRemote, requirement);
+    public static boolean requirementAchieved(Player player, Requirement requirement) {
+        return player != null && requirementAchieved(player.getUUID(), player.level().isClientSide(), requirement);
     }
 
     /**
@@ -150,32 +150,32 @@ public class RequirementCache {
     @SubscribeEvent
     public static void onLevelChange(LevelUpEvent.Post event) {
         //Just invalidate all skills because it is easier than checking each requirement they have to see if the skill matches
-        invalidateCache(event.getEntityPlayer().getUniqueID(), SkillRequirement.class);
+        invalidateCache(event.getEntity().getUUID(), SkillRequirement.class);
     }
 
     @SubscribeEvent
     public static void onUnlockableLocked(LockUnlockableEvent.Post event) {
-        invalidateCache(event.getEntityPlayer().getUniqueID(), TraitRequirement.class);
+        invalidateCache(event.getEntity().getUUID(), TraitRequirement.class);
     }
 
     @SubscribeEvent
     public static void onUnlockableUnlocked(UnlockUnlockableEvent.Post event) {
-        invalidateCache(event.getEntityPlayer().getUniqueID(), TraitRequirement.class);
+        invalidateCache(event.getEntity().getUUID(), TraitRequirement.class);
     }
 
     @SubscribeEvent
     public static void onAdvancement(AdvancementEvent event) {
-        invalidateCache(event.getEntityPlayer().getUniqueID(), AdvancementRequirement.class);
+        invalidateCache(event.getEntity().getUUID(), AdvancementRequirement.class);
     }
 
     @SubscribeEvent
     public static void onDisconnect(PlayerEvent.PlayerLoggedOutEvent event) {
-        removeCache(event.player.getUniqueID(), true);
-        removeCache(event.player.getUniqueID(), false);
+        removeCache(event.getEntity().getUUID(), true);
+        removeCache(event.getEntity().getUUID(), false);
     }
 
-    public static void removeCache(EntityPlayer player) {
-        removeCache(player.getUniqueID(), player.getEntityWorld().isRemote);
+    public static void removeCache(Player player) {
+        removeCache(player.getUUID(), player.level().isClientSide());
     }
 
     public static void removeCache(UUID uuid, boolean isRemote) {
@@ -187,16 +187,16 @@ public class RequirementCache {
     }
 
     @Nullable
-    private EntityPlayer getPlayer() {
-        if (isRemote) {
-            WorldClient world = Minecraft.getMinecraft().world;
-            return world == null ? null : world.getPlayerEntityByUUID(uuid);
+    private Player getPlayer() {
+        if (isClientSide) {
+            ClientLevel level = Minecraft.getInstance().level;
+            return level == null ? null : level.getPlayerByUUID(uuid);
         }
-        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         //Server should only be able to be null when isRemote is true, but just in case have this statement
         if (server != null) {
-            for (WorldServer world : server.worlds) {
-                EntityPlayer player = world.getPlayerEntityByUUID(uuid);
+            for (ServerLevel level : server.getAllLevels()) {
+                Player player = level.getPlayerByUUID(uuid);
                 if (player != null) {
                     return player;
                 }
@@ -219,14 +219,14 @@ public class RequirementCache {
      */
     public void forceClear() {
         if (isValid()) {
-            EntityPlayer player = getPlayer();
+            Player player = getPlayer();
             if (player != null) {
                 requirementCache.clear();
                 recentlyInvalidated.clear();
                 dirtyCache = false;
                 MinecraftForge.EVENT_BUS.post(new CacheInvalidatedEvent(player, true));
-                if (!isRemote) {
-                    PacketHandler.INSTANCE.sendTo(new InvalidateRequirementPacket(uuid), (EntityPlayerMP) player);
+                if (!isClientSide) {
+                    PacketHandler.INSTANCE.sendTo(new InvalidateRequirementPacket(uuid), (ServerPlayer) player);
                 }
             }
         }
@@ -236,13 +236,17 @@ public class RequirementCache {
         if (requirement == null || !isValid()) {
             return false;
         }
-        EntityPlayer player = getPlayer();
+        Player player = getPlayer();
         if (player == null) {
             return false;
         }
 
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return false;
+        }
+
         if (!requirement.isCacheable()) {
-            return requirement.achievedByPlayer(player);
+            return requirement.achievedByPlayer(serverPlayer);
         }
 
         Class<? extends Requirement> clazz = requirement.getClass();
@@ -255,7 +259,7 @@ public class RequirementCache {
         } else {
             requirementCache.put(clazz, cache = new HashMap<>());
         }
-        boolean achieved = requirement.achievedByPlayer(player);
+        boolean achieved = requirement.achievedByPlayer(serverPlayer);
         cache.put(requirement, achieved);
         if (!dirtyCache && dirtyCacheTypes.stream().anyMatch(dirtyType -> dirtyType.isInstance(requirement))) {
             dirtyCache = true;
@@ -271,7 +275,7 @@ public class RequirementCache {
     }
 
     public void invalidateCache(Class<? extends Requirement>... cacheType) {
-        EntityPlayer player = getPlayer();
+        Player player = getPlayer();
         if (player == null) {
             //Do not fire off a cache invalidated event, as we do not know what player to fire it with
             //TODO: At some point maybe make it so that the CacheInvalidatedEvent can be fired via uuid instead of with a player

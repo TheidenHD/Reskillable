@@ -1,14 +1,14 @@
 package codersafterdark.reskillable.api.event;
 
 import codersafterdark.reskillable.api.unlockable.Unlockable;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.fml.common.eventhandler.Cancelable;
+import net.minecraftforge.eventbus.api.Cancelable;
 
 public class UnlockUnlockableEvent extends PlayerEvent {
     private Unlockable unlockable;
 
-    protected UnlockUnlockableEvent(EntityPlayer player, Unlockable unlockable) {
+    protected UnlockUnlockableEvent(Player player, Unlockable unlockable) {
         super(player);
         this.unlockable = unlockable;
     }
@@ -19,13 +19,13 @@ public class UnlockUnlockableEvent extends PlayerEvent {
 
     @Cancelable
     public static class Pre extends UnlockUnlockableEvent {
-        public Pre(EntityPlayer player, Unlockable unlockable) {
+        public Pre(Player player, Unlockable unlockable) {
             super(player, unlockable);
         }
     }
 
     public static class Post extends UnlockUnlockableEvent {
-        public Post(EntityPlayer player, Unlockable unlockable) {
+        public Post(Player player, Unlockable unlockable) {
             super(player, unlockable);
         }
     }

@@ -1,18 +1,18 @@
 package codersafterdark.reskillable.api.requirement;
 
 import codersafterdark.reskillable.api.data.PlayerData;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 //Needs to be a separate object from FalseRequirement, so that it doesn't always get trimmed out of logic requirements
 public class UnobtainableRequirement extends Requirement {
     public UnobtainableRequirement() {
-        this.tooltip = TextFormatting.RED + new TextComponentTranslation("reskillable.requirements.format.unobtainable").getUnformattedComponentText();
+        this.tooltip = ChatFormatting.RED + Component.translatable("reskillable.requirements.format.unobtainable").getString();
     }
 
     @Override
-    public boolean achievedByPlayer(EntityPlayer entityPlayerMP) {
+    public boolean achievedByPlayer(ServerPlayer entityPlayerMP) {
         return false;
     }
 

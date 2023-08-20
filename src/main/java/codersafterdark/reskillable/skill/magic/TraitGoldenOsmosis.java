@@ -1,7 +1,5 @@
 package codersafterdark.reskillable.skill.magic;
 
-import static codersafterdark.reskillable.lib.LibMisc.MOD_ID;
-
 import codersafterdark.reskillable.api.unlockable.Trait;
 import codersafterdark.reskillable.base.ExperienceHelper;
 import net.minecraft.entity.player.EntityPlayer;
@@ -10,6 +8,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
+
+import static codersafterdark.reskillable.lib.LibMisc.MOD_ID;
 
 public class TraitGoldenOsmosis extends Trait {
     public TraitGoldenOsmosis() {

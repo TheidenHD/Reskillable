@@ -1,0 +1,33 @@
+# The overall format is standard TOML format, v0.5.0: https://github.com/toml-lang/toml
+
+#TODO: Fix the now hardcoded stuff to use the processResources outputs
+
+modLoader = "javafml" #mandatory
+loaderVersion = "${loader_version_range}" #${loader_version}
+license = "${mod_license}" #${license}
+#issueTrackerURL = "${issue_tracker_url}"
+
+[[mods]]
+modId = ${mod_id} #mandatory #${modid}
+version = ${mod_version} #mandatory #${file.jarVersion}
+displayName = ${mod_name} #mandatory #${modName}
+#updateJSONURL="${updateURL}" #optional
+#displayURL= "${displayURL}" #optional
+#logoFile="culinarium.png" #optional
+#credits="Thanks for this example mod goes to Java" #optional
+authors = ${mod_authors} #optional
+description = ${mod_description} #${modDesc}
+
+[[dependencies.${mod_id}]] #optional
+modId = "forge" #mandatory
+mandatory = true #mandatory
+versionRange = "${neo_version_Range}" #mandatory #${forge_version}
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "minecraft"
+mandatory = true
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"

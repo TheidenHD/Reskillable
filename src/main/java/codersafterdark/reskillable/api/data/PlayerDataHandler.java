@@ -1,20 +1,18 @@
 package codersafterdark.reskillable.api.data;
 
 import codersafterdark.reskillable.api.requirement.RequirementCache;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.EnderTeleportEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
 import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +23,7 @@ public class PlayerDataHandler {
     private static final String DATA_TAG = "SkillableData";
     private static HashMap<Integer, PlayerData> playerData = new HashMap<>();
 
-    public static PlayerData get(EntityPlayer player) {
+    public static PlayerData get(Player player) {
         if (player == null) {
             return null;
         }
@@ -37,9 +35,9 @@ public class PlayerDataHandler {
 
         PlayerData data = playerData.get(key);
         if (data.playerWR.get() != player) {
-            NBTTagCompound cmp = new NBTTagCompound();
+            CompoundTag cmp = new CompoundTag();
             data.saveToNBT(cmp);
-            RequirementCache.removeCache(player.getUniqueID(), player.getEntityWorld().isRemote);
+            RequirementCache.removeCache(player.getUUID(), player.level().isClientSide());
             playerData.remove(key);
             data = get(player);
             data.loadFromNBT(cmp);
@@ -60,36 +58,36 @@ public class PlayerDataHandler {
         removals.forEach(i -> playerData.remove(i));
     }
 
-    private static int getKey(EntityPlayer player) {
-        return player == null ? 0 : player.hashCode() << 1 + (player.getEntityWorld().isRemote ? 1 : 0);
+    private static int getKey(Player player) {
+        return player == null ? 0 : player.hashCode() << 1 + (player.level().isClientSide() ? 1 : 0);
     }
 
-    public static NBTTagCompound getDataCompoundForPlayer(EntityPlayer player) {
-        NBTTagCompound forgeData = player.getEntityData();
-        if (!forgeData.hasKey(EntityPlayer.PERSISTED_NBT_TAG)) {
-            forgeData.setTag(EntityPlayer.PERSISTED_NBT_TAG, new NBTTagCompound());
+    public static CompoundTag getDataCompoundForPlayer(Player player) {
+        CompoundTag forgeData = player.getPersistentData();
+        if (!forgeData.contains(Player.PERSISTED_NBT_TAG)) {
+            forgeData.put(Player.PERSISTED_NBT_TAG, new CompoundTag());
         }
 
-        NBTTagCompound persistentData = forgeData.getCompoundTag(EntityPlayer.PERSISTED_NBT_TAG);
-        if (!persistentData.hasKey(DATA_TAG)) {
-            persistentData.setTag(DATA_TAG, new NBTTagCompound());
+        CompoundTag persistentData = forgeData.getCompound(Player.PERSISTED_NBT_TAG);
+        if (!persistentData.contains(DATA_TAG)) {
+            persistentData.put(DATA_TAG, new CompoundTag());
         }
 
-        return persistentData.getCompoundTag(DATA_TAG);
+        return persistentData.getCompound(DATA_TAG);
     }
 
     public static class EventHandler {
 
         @SubscribeEvent
-        public static void onServerTick(ServerTickEvent event) {
-            if (event.phase == Phase.END) {
+        public static void onServerTick(TickEvent.ServerTickEvent event) {
+            if (event.phase == TickEvent.Phase.END) {
                 PlayerDataHandler.cleanup();
             }
         }
 
         @SubscribeEvent
-        public static void onPlayerLogin(PlayerLoggedInEvent event) {
-            PlayerData data = PlayerDataHandler.get(event.player);
+        public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+            PlayerData data = PlayerDataHandler.get(event.getEntity());
             if (data != null) {
                 data.sync();
                 data.getRequirementCache().forceClear();
@@ -97,8 +95,8 @@ public class PlayerDataHandler {
         }
 
         @SubscribeEvent
-        public static void onPlayerTick(PlayerTickEvent event) {
-            if (event.phase == Phase.END) {
+        public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+            if (event.phase == TickEvent.Phase.END) {
                 PlayerData data = PlayerDataHandler.get(event.player);
                 if (data != null) {
                     data.tickPlayer(event);
@@ -116,7 +114,7 @@ public class PlayerDataHandler {
 
         @SubscribeEvent
         public static void onGetBreakSpeed(BreakSpeed event) {
-            PlayerData data = PlayerDataHandler.get(event.getEntityPlayer());
+            PlayerData data = PlayerDataHandler.get(event.getEntity());
             if (data != null) {
                 data.breakSpeed(event);
             }
@@ -124,8 +122,8 @@ public class PlayerDataHandler {
 
         @SubscribeEvent
         public static void onMobDrops(LivingDropsEvent event) {
-            if (event.getSource().getTrueSource() instanceof EntityPlayer) {
-                PlayerData data = PlayerDataHandler.get((EntityPlayer) event.getSource().getTrueSource());
+            if (event.getSource().getEntity() instanceof Player) {
+                PlayerData data = PlayerDataHandler.get((Player) event.getSource().getEntity());
                 if (data != null) {
                     data.mobDrops(event);
                 }
@@ -134,14 +132,14 @@ public class PlayerDataHandler {
 
         @SubscribeEvent
         public static void onHurt(LivingHurtEvent event) {
-            if (event.getEntity() instanceof EntityPlayer) {
-                PlayerData data = PlayerDataHandler.get((EntityPlayer) event.getEntity());
+            if (event.getEntity() instanceof Player) {
+                PlayerData data = PlayerDataHandler.get((Player) event.getEntity());
                 if (data != null) {
                     data.hurt(event);
                 }
             }
-            if (event.getSource().getTrueSource() instanceof EntityPlayer) {
-                PlayerData data = PlayerDataHandler.get((EntityPlayer) event.getSource().getTrueSource());
+            if (event.getSource().getEntity() instanceof Player) {
+                PlayerData data = PlayerDataHandler.get((Player) event.getSource().getEntity());
                 if (data != null) {
                     data.attackMob(event);
                 }
@@ -150,7 +148,7 @@ public class PlayerDataHandler {
 
         @SubscribeEvent
         public static void onRightClickBlock(RightClickBlock event) {
-            PlayerData data = PlayerDataHandler.get(event.getEntityPlayer());
+            PlayerData data = PlayerDataHandler.get(event.getEntity());
             if (data != null) {
                 data.rightClickBlock(event);
             }
@@ -158,8 +156,8 @@ public class PlayerDataHandler {
 
         @SubscribeEvent
         public static void onEnderTeleport(EnderTeleportEvent event) {
-            if (event.getEntity() instanceof EntityPlayer) {
-                PlayerData data = PlayerDataHandler.get((EntityPlayer) event.getEntity());
+            if (event.getEntity() instanceof Player) {
+                PlayerData data = PlayerDataHandler.get((Player) event.getEntity());
                 if (data != null) {
                     data.enderTeleport(event);
                 }
@@ -168,8 +166,8 @@ public class PlayerDataHandler {
 
         @SubscribeEvent
         public static void onMobDeath(LivingDeathEvent event) {
-            if (event.getSource().getTrueSource() instanceof EntityPlayer) {
-                PlayerData data = PlayerDataHandler.get((EntityPlayer) event.getSource().getTrueSource());
+            if (event.getSource().getEntity() instanceof Player) {
+                PlayerData data = PlayerDataHandler.get((Player) event.getSource().getEntity());
                 if (data != null) {
                     data.killMob(event);
                 }

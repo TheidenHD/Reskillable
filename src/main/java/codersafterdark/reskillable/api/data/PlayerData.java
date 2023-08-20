@@ -7,8 +7,9 @@ import codersafterdark.reskillable.api.requirement.RequirementCache;
 import codersafterdark.reskillable.api.skill.Skill;
 import codersafterdark.reskillable.api.unlockable.Ability;
 import codersafterdark.reskillable.api.unlockable.IAbilityEventHandler;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.EnderTeleportEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
@@ -16,7 +17,6 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
 import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 
 import java.lang.ref.WeakReference;
 import java.util.*;
@@ -26,15 +26,15 @@ public class PlayerData {
     private static final String TAG_SKILLS_CMP = "SkillLevels";
     private final boolean client;
     private final RequirementCache requirementCache;
-    public WeakReference<EntityPlayer> playerWR;
+    public WeakReference<Player> playerWR;
     private Map<Skill, PlayerSkillInfo> skillInfo = new HashMap<>();
 
-    public PlayerData(EntityPlayer player) {
+    public PlayerData(Player player) {
         playerWR = new WeakReference<>(player);
-        client = player.getEntityWorld().isRemote;
+        client = player.level().isClientSide();
         requirementCache = RequirementCache.getCache(player);
 
-        ReskillableRegistries.SKILLS.getValuesCollection().forEach(s -> skillInfo.put(s, new PlayerSkillInfo(s)));
+        ReskillableRegistries.SKILLS.getValues().forEach(s -> skillInfo.put(s, new PlayerSkillInfo(s)));
 
         load();
     }
@@ -72,10 +72,10 @@ public class PlayerData {
 
     public void load() {
         if (!client) {
-            EntityPlayer player = playerWR.get();
+            Player player = playerWR.get();
 
             if (player != null) {
-                NBTTagCompound cmp = PlayerDataHandler.getDataCompoundForPlayer(player);
+                CompoundTag cmp = PlayerDataHandler.getDataCompoundForPlayer(player);
                 loadFromNBT(cmp);
             }
         }
@@ -83,10 +83,10 @@ public class PlayerData {
 
     public void save() {
         if (!client) {
-            EntityPlayer player = playerWR.get();
+            Player player = playerWR.get();
 
             if (player != null) {
-                NBTTagCompound cmp = PlayerDataHandler.getDataCompoundForPlayer(player);
+                CompoundTag cmp = PlayerDataHandler.getDataCompoundForPlayer(player);
                 saveToNBT(cmp);
             }
         }
@@ -94,7 +94,7 @@ public class PlayerData {
 
     public void sync() {
         if (!client) {
-            EntityPlayer player = playerWR.get();
+            Player player = playerWR.get();
             ReskillableAPI.getInstance().syncPlayerData(player, this);
         }
     }
@@ -104,36 +104,37 @@ public class PlayerData {
         sync();
     }
 
-    public void loadFromNBT(NBTTagCompound cmp) {
-        NBTTagCompound skillsCmp = cmp.getCompoundTag(TAG_SKILLS_CMP);
+    public void loadFromNBT(CompoundTag cmp) {
+        CompoundTag skillsCmp = cmp.getCompound(TAG_SKILLS_CMP);
         for (PlayerSkillInfo info : skillInfo.values()) {
             String key = info.skill.getKey();
-            if (skillsCmp.hasKey(key)) {
-                NBTTagCompound infoCmp = skillsCmp.getCompoundTag(key);
+            if (skillsCmp.contains(key)) {
+                CompoundTag infoCmp = skillsCmp.getCompound(key);
                 info.loadFromNBT(infoCmp);
             }
         }
     }
 
-    public void saveToNBT(NBTTagCompound cmp) {
-        NBTTagCompound skillsCmp = new NBTTagCompound();
+    public void saveToNBT(CompoundTag cmp) {
+        CompoundTag skillsCmp = new CompoundTag();
 
         for (PlayerSkillInfo info : skillInfo.values()) {
             String key = info.skill.getKey();
-            NBTTagCompound infoCmp = new NBTTagCompound();
+            CompoundTag infoCmp = new CompoundTag();
             info.saveToNBT(infoCmp);
-            skillsCmp.setTag(key, infoCmp);
+            skillsCmp.put(key, infoCmp);
         }
 
-        cmp.setTag(TAG_SKILLS_CMP, skillsCmp);
+        cmp.put(TAG_SKILLS_CMP, skillsCmp);
     }
 
     // Event Handlers
 
-    public void tickPlayer(PlayerTickEvent event) {
+    public void tickPlayer(TickEvent.PlayerTickEvent event) {
         forEachEventHandler(h -> h.onPlayerTick(event));
     }
 
+    // TODO: Figure this out
     public void blockDrops(HarvestDropsEvent event) {
         forEachEventHandler(h -> h.onBlockDrops(event));
     }

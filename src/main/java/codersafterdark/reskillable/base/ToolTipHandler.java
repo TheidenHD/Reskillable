@@ -4,13 +4,20 @@ import codersafterdark.reskillable.api.data.PlayerData;
 import codersafterdark.reskillable.api.data.PlayerDataHandler;
 import codersafterdark.reskillable.api.data.RequirementHolder;
 import codersafterdark.reskillable.api.event.CacheInvalidatedEvent;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -25,9 +32,9 @@ import java.util.function.Function;
 import static net.minecraftforge.fml.common.eventhandler.EventPriority.LOW;
 
 public class ToolTipHandler { //TODO: Convert this from being basically all static to being an object (Low priority)
-    private static Map<Class<? extends GuiScreen>, Function<ToolTipInfo, List<String>>> tooltipInjectors = new HashMap<>();
+    private static Map<Class<? extends Screen>, Function<ToolTipInfo, List<String>>> tooltipInjectors = new HashMap<>();
     private static RequirementHolder lastLock = LevelLockHandler.EMPTY_LOCK;
-    private static Class<? extends GuiScreen> currentGui;
+    private static Class<? extends Screen> currentGui;
     private static List<String> toolTip = new ArrayList<>();
     private static ItemStack lastItem;
     private static boolean enabled;
@@ -39,25 +46,24 @@ public class ToolTipHandler { //TODO: Convert this from being basically all stat
     }
 
     @SubscribeEvent
-    @SideOnly(Side.CLIENT)
     public static void onTooltip(ItemTooltipEvent event) {
         if (!enabled || event.isCanceled()) {
             return;
         }
         ItemStack current = event.getItemStack();
-        PlayerData data = PlayerDataHandler.get(Minecraft.getMinecraft().player);
+        PlayerData data = PlayerDataHandler.get(Minecraft.getInstance().player);
         if (lastItem != current) {
             lastItem = current;
             lastLock = LevelLockHandler.getSkillLock(current);
             lastLock.addRequirementsIgnoreShift(data, toolTip = new ArrayList<>());
         }
-        boolean showDetails = !ConfigHandler.hideRequirements || GuiScreen.isShiftKeyDown();
+        boolean showDetails = !ConfigHandler.hideRequirements || Screen.hasShiftDown();
         List<String> extraToolTips = new ArrayList<>();
 
         if (currentGui != null) {
             //TODO: If an addon/set of addons ever want to both inject tooltips for the same class make tooltipInjectors hold a list of functions
             ToolTipInfo info = new ToolTipInfo(showDetails, data, lastItem);
-            for (Map.Entry<Class<? extends GuiScreen>, Function<ToolTipInfo, List<String>>> injectorInfo : tooltipInjectors.entrySet()) {
+            for (Map.Entry<Class<? extends Screen>, Function<ToolTipInfo, List<String>>> injectorInfo : tooltipInjectors.entrySet()) {
                 if (injectorInfo.getKey().isAssignableFrom(currentGui)) {
                     extraToolTips.addAll(injectorInfo.getValue().apply(info));
                 }
@@ -68,36 +74,33 @@ public class ToolTipHandler { //TODO: Convert this from being basically all stat
         if (!toolTip.isEmpty() || !extraToolTips.isEmpty()) {
             List<String> curTooltip = event.getToolTip();
             if (showDetails) {
-                curTooltip.add(TextFormatting.DARK_PURPLE + new TextComponentTranslation("reskillable.misc.requirements").getUnformattedComponentText());
+                curTooltip.add(ChatFormatting.DARK_PURPLE + Component.translatable("reskillable.misc.requirements").getString());
                 curTooltip.addAll(toolTip);
             } else {
-                curTooltip.add(TextFormatting.DARK_PURPLE + new TextComponentTranslation("reskillable.misc.requirements_shift").getUnformattedComponentText());
+                curTooltip.add(ChatFormatting.DARK_PURPLE + Component.translatable("reskillable.misc.requirements_shift").getString());
             }
             curTooltip.addAll(extraToolTips);
         }
     }
 
     @SubscribeEvent
-    @SideOnly(Side.CLIENT)
-    public static void onGuiOpen(GuiOpenEvent event) {
+    public static void onGuiOpen(ScreenEvent.Opening event) {
         if (enabled && !event.isCanceled()) {
-            currentGui = event.getGui() == null ? null : event.getGui().getClass();
+            currentGui = event.getNewScreen() == null ? null : event.getNewScreen().getClass();
         }
     }
 
-    @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void connect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
         enabled = true;
     }
 
-    @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void disconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
         enabled = false;
     }
 
-    @SubscribeEvent(priority = LOW)
+    @SubscribeEvent(priority = EventPriority.LOW)
     public static void onCacheInvalidated(CacheInvalidatedEvent event) {
         if (event.anyModified()) {
             //If nothing was invalidated the tooltip is still valid, as if the tooltip contained information it would have had data invalidated
@@ -105,7 +108,7 @@ public class ToolTipHandler { //TODO: Convert this from being basically all stat
         }
     }
 
-    public static void addTooltipInjector(Class<? extends GuiScreen> gui, Function<ToolTipInfo, List<String>> creator) {
+    public static void addTooltipInjector(Class<? extends Screen> gui, Function<ToolTipInfo, List<String>> creator) {
         tooltipInjectors.put(gui, creator);
     }
 

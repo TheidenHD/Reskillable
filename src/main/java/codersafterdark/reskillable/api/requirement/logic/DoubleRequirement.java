@@ -3,8 +3,8 @@ package codersafterdark.reskillable.api.requirement.logic;
 import codersafterdark.reskillable.api.data.PlayerData;
 import codersafterdark.reskillable.api.requirement.Requirement;
 import codersafterdark.reskillable.api.requirement.RequirementCache;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.entity.player.Player;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -28,30 +28,30 @@ public abstract class DoubleRequirement extends Requirement implements OuterRequ
 
     protected abstract String getFormat();
 
-    protected boolean leftAchieved(EntityPlayer player) {
+    protected boolean leftAchieved(Player player) {
         return RequirementCache.requirementAchieved(player, getLeft());
     }
 
-    protected boolean rightAchieved(EntityPlayer player) {
+    protected boolean rightAchieved(Player player) {
         return RequirementCache.requirementAchieved(player, getRight());
     }
 
     @Override
     public String getToolTip(PlayerData data) {
-        TextFormatting color = data == null || !data.requirementAchieved(this) ? TextFormatting.RED : TextFormatting.GREEN;
-        return TextFormatting.GRAY + " - " + getToolTipPart(data, getLeft()) + ' ' + color + getFormat() + ' ' + getToolTipPart(data, getRight());
+        ChatFormatting color = data == null || !data.requirementAchieved(this) ? ChatFormatting.RED : ChatFormatting.GREEN;
+        return ChatFormatting.GRAY + " - " + getToolTipPart(data, getLeft()) + ' ' + color + getFormat() + ' ' + getToolTipPart(data, getRight());
     }
 
     private String getToolTipPart(PlayerData data, Requirement side) {
         String tooltip = side.getToolTip(data);
-        if (tooltip != null && tooltip.startsWith(TextFormatting.GRAY + " - ")) {
-            tooltip = tooltip.replaceFirst(TextFormatting.GRAY + " - ", "");
+        if (tooltip != null && tooltip.startsWith(ChatFormatting.GRAY + " - ")) {
+            tooltip = tooltip.replaceFirst(ChatFormatting.GRAY + " - ", "");
         }
         if (side instanceof DoubleRequirement) {
-            tooltip = TextFormatting.GOLD + "(" + TextFormatting.RESET + tooltip + TextFormatting.GOLD + ')';
+            tooltip = ChatFormatting.GOLD + "(" + ChatFormatting.RESET + tooltip + ChatFormatting.GOLD + ')';
         } else {
             //Ensure that no color leaks
-            tooltip = TextFormatting.RESET + tooltip;
+            tooltip = ChatFormatting.RESET + tooltip;
         }
         return tooltip;
     }

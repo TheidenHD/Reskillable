@@ -3,26 +3,23 @@ package codersafterdark.reskillable.api.toast;
 import codersafterdark.reskillable.api.skill.Skill;
 import codersafterdark.reskillable.client.base.RenderHelper;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.toasts.GuiToast;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.client.gui.components.toasts.ToastComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 
-@SideOnly(Side.CLIENT)
 public class SkillToast extends AbstractToast {
     private final Skill skill;
     private final int rank;
 
     public SkillToast(Skill skill, int level) {
-        super(skill.getName(), new TextComponentTranslation("reskillable.toast.skill_desc", level).getUnformattedComponentText());
+        super(skill.getName(), Component.translatable("reskillable.toast.skill_desc", level).getString());
         this.skill = skill;
         this.rank = this.skill.getRank(level);
     }
 
     @Override
-    protected void renderImage(GuiToast guiToast) {
+    protected void renderImage(ToastComponent guiToast) {
         if (this.skill.hasCustomSprites()) {
             ResourceLocation sprite = this.skill.getSpriteLocation(rank);
             if (sprite != null) {

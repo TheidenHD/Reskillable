@@ -1,17 +1,17 @@
 package codersafterdark.reskillable.api.event;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.fml.common.eventhandler.Event;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.eventbus.api.Event;
 
 public class CacheInvalidatedEvent extends Event {
-    private EntityPlayer player;
+    private Player player;
     private boolean modified;
 
-    public CacheInvalidatedEvent(EntityPlayer player) {
+    public CacheInvalidatedEvent(Player player) {
         this(player, false);
     }
 
-    public CacheInvalidatedEvent(EntityPlayer player, boolean modified) {
+    public CacheInvalidatedEvent(Player player, boolean modified) {
         this.player = player;
         this.modified = modified;
     }
@@ -19,7 +19,7 @@ public class CacheInvalidatedEvent extends Event {
     /**
      * @return The player who's cache was invalidated.
      */
-    public EntityPlayer getPlayer() {
+    public Player getPlayer() {
         return this.player;
     }
 
