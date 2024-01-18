@@ -50,15 +50,17 @@ repositories{
         name 'JEI'
         url 'http://dvs1.progwml6.com/files/maven'
     }
-    maven {
-        name = 'Waila'
-        url 'https://tehnut.info/maven'
+    maven{
+        name = 'Curse Maven'
+        url = "https://cursemaven.com"
     }
 }
 
 dependencies {
     deobfCompile "mezz.jei:jei_1.12.2:4.8.5.144"
-    deobfCompile "mcp.mobius.waila:Hwyla:1.8.21-B36_1.12"
+    deobfCompile "curse.maven:project-253449:2568751-sources-api"
+    deobfCompile "curse.maven:project-230495:3007966"
+    deobfCompile "curse.maven:project-228029:2499846"
 }
 
 uploadArchives {

@@ -36,6 +36,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static net.minecraftforge.fml.common.eventhandler.EventPriority.HIGH;
+import static net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST;
 
 public class LevelLockHandler {
     public static final String[] DEFAULT_SKILL_LOCKS = new String[]{"minecraft:iron_shovel:*=reskillable:gathering|5", "minecraft:iron_axe:*=reskillable:gathering|5", "minecraft:iron_sword:*=reskillable:attack|5", "minecraft:iron_pickaxe:*=reskillable:mining|5", "minecraft:iron_hoe:*=reskillable:farming|5", "minecraft:iron_helmet:*=reskillable:defense|5", "minecraft:iron_chestplate:*=reskillable:defense|5", "minecraft:iron_leggings:*=reskillable:defense|5", "minecraft:iron_boots:*=reskillable:defense|5", "minecraft:golden_shovel:*=reskillable:gathering|5,reskillable:magic|5", "minecraft:golden_axe:*=reskillable:gathering|5,reskillable:magic|5", "minecraft:golden_sword:*=reskillable:attack|5,reskillable:magic|5", "minecraft:golden_pickaxe:*=reskillable:mining|5,reskillable:magic|5", "minecraft:golden_hoe:*=reskillable:farming|5,reskillable:magic|5", "minecraft:golden_helmet:*=reskillable:defense|5,reskillable:magic|5", "minecraft:golden_chestplate:*=reskillable:defense|5,reskillable:magic|5", "minecraft:golden_leggings:*=reskillable:defense|5,reskillable:magic|5", "minecraft:golden_boots:*=reskillable:defense|5,reskillable:magic|5", "minecraft:diamond_shovel:*=reskillable:gathering|16", "minecraft:diamond_axe:*=reskillable:gathering|16", "minecraft:diamond_sword:*=reskillable:attack|16", "minecraft:diamond_pickaxe:*=reskillable:mining|16", "minecraft:diamond_hoe:*=reskillable:farming|16", "minecraft:diamond_helmet:*=reskillable:defense|16", "minecraft:diamond_chestplate:*=reskillable:defense|16", "minecraft:diamond_leggings:*=reskillable:defense|16", "minecraft:diamond_boots:*=reskillable:defense|16", "minecraft:shears:*=reskillable:farming|5,reskillable:gathering|5", "minecraft:fishing_rod:*=reskillable:gathering|8", "minecraft:shield:*=reskillable:defense|8", "minecraft:bow:*=reskillable:attack|8", "minecraft:ender_pearl=reskillable:magic|8", "minecraft:ender_eye=reskillable:magic|16,reskillable:building|8", "minecraft:elytra:*=reskillable:defense|16,reskillable:agility|24,reskillable:magic|16", "minecraft:lead=reskillable:farming|5", "minecraft:end_crystal=reskillable:building|24,reskillable:magic|32", "minecraft:iron_horse_armor:*=reskillable:defense|5,reskillable:agility|5", "minecraft:golden_horse_armor:*=reskillable:defense|5,reskillable:magic|5,reskillable:agility|5", "minecraft:diamond_horse_armor:*=reskillable:defense|16,reskillable:agility|16", "minecraft:fireworks=reskillable:agility|24", "minecraft:dye:15=reskillable:farming|12", "minecraft:saddle=reskillable:agility|12", "minecraft:redstone=reskillable:building|5", "minecraft:redstone_torch=reskillable:building|5", "minecraft:skull:1=reskillable:building|20,reskillable:attack|20,reskillable:defense|20"};
@@ -295,10 +296,13 @@ public class LevelLockHandler {
         if (stack.isEmpty()) {
             stack = block.getItem(event.getWorld(), event.getPos(), state);
         }
-        if (block.hasTileEntity(state)) {
+        if (!stack.isEmpty() && block.hasTileEntity(state)) {
             TileEntity te = event.getWorld().getTileEntity(event.getPos());
             if (te != null && !te.isInvalid()) {
-                stack.setTagCompound(te.writeToNBT(new NBTTagCompound()));
+                try {
+                    stack.setTagCompound(te.writeToNBT(new NBTTagCompound()));
+                }
+                catch (Exception e) {}
             }
         }
         genericEnforce(event, event.getEntityPlayer(), stack, MessageLockedItem.MSG_BLOCK_BREAK_LOCKED);
@@ -328,10 +332,13 @@ public class LevelLockHandler {
         if (stack.isEmpty()) {
             stack = block.getItem(event.getWorld(), event.getPos(), state);
         }
-        if (block.hasTileEntity(state)) {
+        if (!stack.isEmpty() && block.hasTileEntity(state)) {
             TileEntity te = event.getWorld().getTileEntity(event.getPos());
             if (te != null && !te.isInvalid()) {
-                stack.setTagCompound(te.writeToNBT(new NBTTagCompound()));
+                try {
+                    stack.setTagCompound(te.writeToNBT(new NBTTagCompound()));
+                }
+                catch (Exception e) {}
             }
         }
         genericEnforce(event, event.getEntityPlayer(), stack, MessageLockedItem.MSG_BLOCK_USE_LOCKED);
@@ -344,10 +351,13 @@ public class LevelLockHandler {
         }
         IBlockState state = event.getWorld().getBlockState(event.getPos());
         ItemStack stack = new ItemStack(state.getBlock(), 1, state.getBlock().getMetaFromState(state));
-        if (state.getBlock().hasTileEntity(state)) {
+        if (!stack.isEmpty() && state.getBlock().hasTileEntity(state)) {
             TileEntity te = event.getWorld().getTileEntity(event.getPos());
             if (te != null && !te.isInvalid()) {
-                stack.setTagCompound(te.writeToNBT(new NBTTagCompound()));
+                try {
+                    stack.setTagCompound(te.writeToNBT(new NBTTagCompound()));
+                }
+                catch (Exception e) {}
             }
         }
         genericEnforce(event, event.getPlayer(), stack, MessageLockedItem.MSG_BLOCK_BREAK_LOCKED);
@@ -358,7 +368,7 @@ public class LevelLockHandler {
         enforce(event);
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = HIGHEST)
     public static void onArmorEquip(LivingEquipmentChangeEvent event) {
         if (event.getEntity() instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) event.getEntity();
@@ -367,8 +377,8 @@ public class LevelLockHandler {
                 if (slot.getSlotType().equals(EntityEquipmentSlot.Type.ARMOR)) {
                     ItemStack stack = player.inventory.armorInventory.get(slot.getIndex());
                     if (!canPlayerUseItem(player, stack)) {
-                        if (!player.inventory.addItemStackToInventory(stack)) {
-                            player.dropItem(stack, false);
+                        if (!player.inventory.addItemStackToInventory(stack.copy())) {
+                            player.dropItem(stack.copy(), false);
                         }
                         player.inventory.armorInventory.set(slot.getIndex(), ItemStack.EMPTY);
                         tellPlayer(player, stack, MessageLockedItem.MSG_ARMOR_EQUIP_LOCKED);

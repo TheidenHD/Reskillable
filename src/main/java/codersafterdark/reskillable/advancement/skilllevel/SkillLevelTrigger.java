@@ -1,6 +1,5 @@
 package codersafterdark.reskillable.advancement.skilllevel;
 
-import codersafterdark.reskillable.Reskillable;
 import codersafterdark.reskillable.advancement.CriterionTrigger;
 import codersafterdark.reskillable.api.ReskillableRegistries;
 import codersafterdark.reskillable.api.skill.Skill;

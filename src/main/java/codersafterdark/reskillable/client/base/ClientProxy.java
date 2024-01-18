@@ -37,11 +37,6 @@ public class ClientProxy extends CommonProxy {
         return Minecraft.getMinecraft().player;
     }
 
-    @SubscribeEvent
-    public static void connect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        new AdvancementManager(null);
-    }
-
     @Override
     @Nullable
     public AdvancementProgress getPlayerAdvancementProgress(EntityPlayer entityPlayer, Advancement advancement) {

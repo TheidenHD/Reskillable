@@ -195,12 +195,7 @@ public class RequirementCache {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         //Server should only be able to be null when isRemote is true, but just in case have this statement
         if (server != null) {
-            for (WorldServer world : server.worlds) {
-                EntityPlayer player = world.getPlayerEntityByUUID(uuid);
-                if (player != null) {
-                    return player;
-                }
-            }
+            return server.getPlayerList().getPlayerByUUID(uuid);
         }
         return null;
     }
