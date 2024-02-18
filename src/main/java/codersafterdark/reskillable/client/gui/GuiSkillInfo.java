@@ -13,6 +13,7 @@ import codersafterdark.reskillable.client.gui.handler.InventoryTabHandler;
 import codersafterdark.reskillable.client.gui.handler.KeyBindings;
 import codersafterdark.reskillable.lib.LibMisc;
 import codersafterdark.reskillable.network.MessageLevelUp;
+import codersafterdark.reskillable.network.MessageLockUnlockable;
 import codersafterdark.reskillable.network.MessageUnlockUnlockable;
 import codersafterdark.reskillable.network.PacketHandler;
 import java.io.IOException;
@@ -44,6 +45,7 @@ public class GuiSkillInfo extends GuiScreen {
     private GuiButtonLevelUp levelUpButton;
     private Unlockable hoveredUnlockable;
     private boolean canPurchase;
+    private boolean isUnlocked;
 
     public GuiSkillInfo(Skill skill) {
         this.skill = skill;
@@ -173,6 +175,7 @@ public class GuiSkillInfo extends GuiScreen {
         if (mx >= x && my >= y && mx < x + 26 && my < y + 26) {
             canPurchase = !unlocked && info.getSkillPoints() >= unlockable.getCost();
             hoveredUnlockable = unlockable;
+            isUnlocked = unlocked;
         }
     }
 
@@ -186,6 +189,9 @@ public class GuiSkillInfo extends GuiScreen {
             addLongStringToTooltip(tooltip, hoveredUnlockable.getDescription(), guiWidth);
         } else {
             tooltip.add(TextFormatting.GRAY + new TextComponentTranslation("reskillable.misc.shift").getUnformattedComponentText());
+            if (info.isUnlocked(hoveredUnlockable)) {
+                tooltip.add(TextFormatting.GRAY + new TextComponentTranslation("reskillable.misc.lock").getUnformattedComponentText());
+            }
             tooltip.add("");
         }
 
@@ -231,6 +237,10 @@ public class GuiSkillInfo extends GuiScreen {
         if (mouseButton == 0 && hoveredUnlockable != null && canPurchase) {
             mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             MessageUnlockUnlockable message = new MessageUnlockUnlockable(skill.getRegistryName(), hoveredUnlockable.getRegistryName());
+            PacketHandler.INSTANCE.sendToServer(message);
+        } else if (mouseButton == 0 && isCtrlKeyDown() && hoveredUnlockable != null && isUnlocked) {
+            mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            MessageLockUnlockable message = new MessageLockUnlockable(skill.getRegistryName(), hoveredUnlockable.getRegistryName());
             PacketHandler.INSTANCE.sendToServer(message);
         } else if (mouseButton == 1 || mouseButton == 3) {
             mc.displayGuiScreen(new GuiSkills());

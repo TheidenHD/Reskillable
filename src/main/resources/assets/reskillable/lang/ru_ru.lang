@@ -6,6 +6,7 @@ reskillable.misc.requirements_shift=SHIFT для отображения треб
 reskillable.misc.skill_points=%d Очки Навыка
 reskillable.misc.shift=SHIFT для описания
 reskillable.misc.unlocked=Открыто!
+reskillable.misc.lock=CTRL и щелкнуть чтобы удалить
 
 reskillable.misc.locked.item=Недостаточно опыта для использования этого предмета!
 reskillable.misc.locked.block_break=Недостаточно опыта для разрушения этого блока!

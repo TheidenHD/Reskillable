@@ -6,6 +6,7 @@ reskillable.misc.requirements_shift=按住 SHIFT 键查看需求
 reskillable.misc.skill_points=%d 技能点数
 reskillable.misc.shift=按住 SHIFT 键查看详细信息
 reskillable.misc.unlocked=已解锁！
+reskillable.misc.lock=按住 CTRL 键并点击以移除
 
 reskillable.misc.locked.item=你不符合使用该物品的需求
 reskillable.misc.locked.block_break=你不符合破坏该方块的需求

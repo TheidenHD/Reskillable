@@ -6,6 +6,7 @@ reskillable.misc.requirements_shift=Hold SHIFT for requirements
 reskillable.misc.skill_points=%d Skill Points
 reskillable.misc.shift=Hold SHIFT for description
 reskillable.misc.unlocked=Unlocked!
+reskillable.misc.lock=Hold CTRL and CLICK to remove
 
 reskillable.misc.locked.item=You don't meet the requirements to use this item
 reskillable.misc.locked.block_break=You don't meet the requirements to break this block
